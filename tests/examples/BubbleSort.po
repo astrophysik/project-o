@@ -1,0 +1,47 @@
+class BubbleSort is
+    this() is
+    end
+
+    method sort(arr: Array[Integer]) is
+        var n : arr.Length()
+        var i : Integer(1)
+
+        while(i.Less(n)) loop
+            var j : Integer(1)
+            var swapped : false
+            
+            while(j.Less(n.Minus(i))) loop
+                if a.get(j).Greator(a.get(j.Plus(1))) then
+                    var tmp : a.get(j)
+                    a.set(j, a.get(j.Plus(1)))
+                    a.set(j.Plus(1), tmp)
+                    swapped := true
+                end
+
+                j := j.Plus(1)
+
+            end
+
+            if swapped.Not then
+                return
+            end
+
+            i := i.Plus(1)
+        end
+    end
+end
+
+class Main is
+    this() is
+        var arr: Array[Integer](5)
+        arr.set(0, 6)
+        arr.set(1, 2)
+        arr.set(2, 4)
+        arr.set(3, 2)
+        arr.set(4, 3)
+
+        var sort : BubbleSort()
+        sort.sort(arr)
+        // IO.print(arr)
+    end
+end

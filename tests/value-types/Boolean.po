@@ -1,0 +1,38 @@
+class Main is
+
+    method Assert(value : Boolean) => IO.print(value)
+
+    this() is
+        Main.Assert( Boolean(true).Not.Equal(Boolean(false)) )
+        Main.Assert( Boolean(false).Not.Equal(Boolean(true)) )
+
+        // AND (все 4 комбинации)
+        Main.Assert( Boolean(true).And(Boolean(true)).Equal(Boolean(true)) )
+        Main.Assert( Boolean(true).And(Boolean(false)).Equal(Boolean(false)) )
+        Main.Assert( Boolean(false).And(Boolean(true)).Equal(Boolean(false)) )
+        Main.Assert( Boolean(false).And(Boolean(false)).Equal(Boolean(false)) )
+
+        // OR (все 4 комбинации)
+        Main.Assert( Boolean(true).Or(Boolean(true)).Equal(Boolean(true)) )
+        Main.Assert( Boolean(true).Or(Boolean(false)).Equal(Boolean(true)) )
+        Main.Assert( Boolean(false).Or(Boolean(true)).Equal(Boolean(true)) )
+        Main.Assert( Boolean(false).Or(Boolean(false)).Equal(Boolean(false)) )
+
+        // XOR (все 4 комбинации)
+        Main.Assert( Boolean(true).Xor(Boolean(true)).Equal(Boolean(false)) )
+        Main.Assert( Boolean(true).Xor(Boolean(false)).Equal(Boolean(true)) )
+        Main.Assert( Boolean(false).Xor(Boolean(true)).Equal(Boolean(true)) )
+        Main.Assert( Boolean(false).Xor(Boolean(false)).Equal(Boolean(false)) )
+        // If 
+        if true then
+            Main.Assert(true)
+        else 
+            Main.Assert(false)
+
+        if false.Not() then
+            Main.Assert(false)
+        else 
+            Main.Assert(true)
+
+    end
+end

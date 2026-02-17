@@ -1,0 +1,29 @@
+class Main is
+  method Assert(cond: Boolean) => IO.print(cond)
+  end
+
+  this() is
+    var l : List[Integer]()
+    l := l.append(Integer(10))
+    l := l.append(Integer(20))
+    l := l.append(Integer(30))
+
+    Main.Assert( l.head().Equal(Integer(10)) )
+
+    var t1 : List[Integer](l.tail())
+    Main.Assert( t1.head().Equal(Integer(20)) )
+
+    var t2 : List[Integer](t1.tail())
+    Main.Assert( t2.head().Equal(Integer(30)) )
+
+    //reference-semantic
+    var b : a
+    b.append(Integer(3))
+
+    var t : a.tail()
+    t := t.tail()     
+    this.Assert( t.head().Equal(Integer(3)) )
+
+    return
+  end
+end
