@@ -45,4 +45,3 @@ class Main is
         // IO.print(arr)
     end
 end
-
