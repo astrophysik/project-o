@@ -1,0 +1,39 @@
+class Main is
+  method Assert(cond: Boolean) => IO.print(value)
+
+  this() is
+    var a : Array[Integer](5)
+
+    Main.Assert( a.Length.Equal(Integer(5)) )
+
+    // set/get
+    a.set(1, Integer(10))
+    a.set(2, Integer(20))
+    a.set(3, Integer(30))
+    a.set(4, Integer(40))
+    a.set(5, Integer(50))
+
+    Main.Assert( a.get(1).Equal(Integer(10)) )
+    Main.Assert( a.get(2).Equal(Integer(20)) )
+    Main.Assert( a.get(3).Equal(Integer(30)) )
+    Main.Assert( a.get(4).Equal(Integer(40)) )
+    Main.Assert( a.get(5).Equal(Integer(50)) )
+
+    a.set(3, Integer(99))
+    Main.Assert( a.get(3).Equal(Integer(99)) )
+
+    //reference-semantic
+
+    var b : a
+
+    b.set(2, Integer(999))
+
+    Main.Assert( a.get(2).Equal(Integer(999)) )
+
+    a.set(1, Integer(111))
+
+    Main.Assert( b.get(1).Equal(Integer(111)) )
+
+    Main.Assert( a.Length.Equal(b.Length) )
+  end
+end

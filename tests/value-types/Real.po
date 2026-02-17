@@ -1,0 +1,48 @@
+class Main is
+    method Assert(value : Boolean) => IO.print(value)
+
+    this() is
+        Main.Assert( Real(2.5).Equal(Real(2.5)) )
+        Main.Assert( Real(Integer(3)).Equal(Real(3.0)) )
+        Main.Assert( Real(Real(1.25)).Equal(Real(1.25)) )
+
+        //  Real -> Integer 
+        Main.Assert( Real(0.0).toInteger.Equal(Integer(0)) )
+        Main.Assert( Real(7.0).toInteger.Equal(Integer(7)) )
+        Main.Assert( Real(-3.0).toInteger.Equal(Integer(-3)) )
+
+        // UnaryMinus
+        Main.Assert( Real(2.5).UnaryMinus.Equal(Real(-2.5)) )
+        Main.Assert( Real(-2.5).UnaryMinus.Equal(Real(2.5)) )
+
+        // Arithmetic Real-Real
+        Main.Assert( Real(1.5).Plus(Real(2.0)).Equal(Real(3.5)) )
+        Main.Assert( Real(5.0).Minus(Real(2.5)).Equal(Real(2.5)) )
+        Main.Assert( Real(2.0).Mult(Real(3.0)).Equal(Real(6.0)) )
+        Main.Assert( Real(7.0).Div(Real(2.0)).Equal(Real(3.5)) )
+
+        // Arithmetic Real-Integer 
+        Main.Assert( Real(1.5).Plus(Integer(2)).Equal(Real(3.5)) )
+        Main.Assert( Real(5.0).Minus(Integer(2)).Equal(Real(3.0)) )
+        Main.Assert( Real(2.5).Mult(Integer(2)).Equal(Real(5.0)) )
+        Main.Assert( Real(7.5).Div(Integer(3)).Equal(Real(2.5)) )
+
+        // Rem
+        Main.Assert( Real(9.0).Rem(Integer(4)).Equal(Real(1.0)) )
+
+        // Comparisons Real-Real
+        Main.Assert( Real(1.0).Less(Real(2.0)) )
+        Main.Assert( Real(2.0).LessEqual(Real(2.0)) )
+        Main.Assert( Real(3.0).Greater(Real(2.0)) )
+        Main.Assert( Real(3.0).GreaterEqual(Real(3.0)) )
+        Main.Assert( Real(2.25).Equal(Real(2.25)) )
+
+        // Comparisons Real-Integer
+        Main.Assert( Real(2.5).Greater(Integer(2)) )
+        Main.Assert( Real(2.0).Equal(Integer(2)) )
+        Main.Assert( Real(-1.0).Less(Integer(0)) )
+
+        // Min/Max
+        Main.Assert( Real.Min.LessEqual(Real.Max) )
+    end
+end

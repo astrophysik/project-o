@@ -1,0 +1,43 @@
+class Main is
+
+    method Assert(value : Boolean) => IO.print(value)
+
+    this () is
+        // Integer(Integer)
+        Main.Assert( Integer(5).Equal(Integer(5)) )
+        Main.Assert( Integer(Integer(7)).Equal(Integer(7)) )
+
+        // Min/Max
+        Main.Assert( Integer.Min.LessEqual(Integer.Max) )
+
+        // convert to Boolean
+        Main.Assert( Integer(0).toBoolean.Equal(Boolean(false)) )
+        Main.Assert( Integer(1).toBoolean.Equal(Boolean(true)) )
+        Main.Assert( Integer(-1).toBoolean.Equal(Boolean(true)) )
+
+        // UnaryMinus
+        Main.Assert( Integer(5).UnaryMinus.Equal(Integer(-5)) )
+        Main.Assert( Integer(-5).UnaryMinus.Equal(Integer(5)) )
+
+        // Arithmetic
+        Main.Assert( Integer(2).Plus(Integer(3)).Equal(Integer(5)) )
+        Main.Assert( Integer(7).Minus(Integer(4)).Equal(Integer(3)) )
+        Main.Assert( Integer(3).Mult(Integer(4)).Equal(Integer(12)) )
+        Main.Assert( Integer(8).Div(Integer(2)).Equal(Integer(4)) )
+        Main.Assert( Integer(9).Rem(Integer(4)).Equal(Integer(1)) )
+
+        Main.Assert( Integer(10).Plus(Integer(0)).Equal(Integer(10)) )
+        Main.Assert( Integer(10).Minus(Integer(0)).Equal(Integer(10)) )
+        Main.Assert( Integer(10).Mult(Integer(1)).Equal(Integer(10)) )
+        Main.Assert( Integer(10).Mult(Integer(0)).Equal(Integer(0)) )
+
+        // Comparisons
+        Main.Assert( Integer(1).Less(Integer(2)) )
+        Main.Assert( Integer(2).LessEqual(Integer(2)) )
+        Main.Assert( Integer(3).Greater(Integer(2)) )
+        Main.Assert( Integer(3).GreaterEqual(Integer(3)) )
+        Main.Assert( Integer(10).Equal(Integer(10)) )
+
+        Main.Assert( Integer(2).Less(Integer(3)).And(Integer(3).Greater(Integer(2))) )
+    end
+end
