@@ -1,0 +1,34 @@
+class IntStack is
+    var elements : Array[Integer]
+    var top : 0
+
+    this(capacity: Integer) is
+        elements := Array[Integer](capacity)
+        top := 0
+    end
+
+    method push(item: Integer) is
+        if top.Less(elements.Length) then
+            elements.set(top, item)
+            top := top.Plus(1)
+        end
+    end
+
+    method pop : Integer is
+        top := top.Minus(1)
+        return elements.get(top)
+    end
+
+    method isEmpty : Boolean => top.Equal(0)
+end
+
+class Main is
+    this() is
+        var st : IntStack := IntStack(10)
+        st.push(10)
+        st.push(20)
+        st.push(30)
+        var x : Integer := st.pop
+        var y : Integer := st.pop
+    end
+end

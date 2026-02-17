@@ -1,0 +1,23 @@
+class Counter is
+    var count : 0
+
+    method increment(step: Integer) is
+        count := count.Plus(step)
+    end
+
+    method get : Integer => count
+
+    method reset is
+        count := 0
+    end
+end
+
+class Main is
+    this() is
+        var c : Counter := Counter()
+        c.increment(5)
+        c.increment(3)
+        var val : Integer := c.get()
+        c.reset()
+    end
+end
