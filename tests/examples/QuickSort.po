@@ -1,0 +1,46 @@
+class QuickSort is
+    this() is end
+
+    method swap(arr: Array[Integer], i: Integer, j: Integer) is
+        var tmp : Integer := arr.get(i)
+        arr.set(i, arr.get(j))
+        arr.set(j, tmp)
+    end
+
+    method partition(arr: Array[Integer], low: Integer, high: Integer) : Integer is
+        var pivot : Integer := arr.get(high)
+        var i : Integer := low.Minus(1)
+        var j : Integer := low
+        while j.Less(high) loop
+            if arr.get(j).Less(pivot) then
+                i := i.Plus(1)
+                this.swap(arr, i, j)
+            end
+            j := j.Plus(1)
+        end
+        this.swap(arr, i.Plus(1), high)
+        return i.Plus(1)
+    end
+
+    method quickSort(arr: Array[Integer], low: Integer, high: Integer) is
+        if low.Less(high) then
+            var pi : Integer := this.partition(arr, low, high)
+            this.quickSort(arr, low, pi.Minus(1))
+            this.quickSort(arr, pi.Plus(1), high)
+        end
+    end
+end
+
+class Main is
+    this() is
+        var arr : Array[Integer](5)
+        arr.set(0, 3)
+        arr.set(1, 1)
+        arr.set(2, 4)
+        arr.set(3, 1)
+        arr.set(4, 5)
+
+        var sort : QuickSort()
+        sort.quickSort(arr, 0, arr.Length.Minus(1))
+    end
+end

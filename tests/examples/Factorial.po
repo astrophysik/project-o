@@ -1,0 +1,18 @@
+class Factorial is
+    this() is end
+
+    method fact(n: Integer) : Integer is
+        if n.Less(2) then
+            return 1
+        else
+            return n.Mult(this.fact(n.Minus(1)))
+        end
+    end
+end
+
+class Main is
+    this() is
+        var f : Factorial := Factorial()
+        var x : Integer := f.fact(5)
+    end
+end
