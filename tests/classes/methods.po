@@ -1,0 +1,22 @@
+class TestMethods is
+  var value : Integer(0)
+  method Set(v: Integer) is
+    value := v
+  end
+  method Get : Integer => value
+  method Double : Integer => value.Mult(2)
+end
+
+class Main is
+ method Assert(value : Boolean) => IO.print(value)
+
+ this() is
+  var tm : TestMethods
+  tm := TestMethods()
+  tm.Set(5)
+  Main.Assert( tm.Get().Equal(Integer(5)) )
+  Main.Assert( tm.Double().Equal(Integer(10)) )
+	
+  return
+ end
+end

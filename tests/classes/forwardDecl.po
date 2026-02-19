@@ -1,0 +1,28 @@
+class ForwardTest is
+  this()
+  method ForwardMethod1 : Integer
+  method ForwardMethod2(p: Integer) : Integer
+  method ForwardMethod3(p: Integer, q: Real) : Real
+   
+  //use before definition
+  method TestForward : Integer is
+    var x : Integer(5)
+    return ForwardMethod1.Plus(ForwardMethod2(x)).Plus(Integer(ForwardMethod3(2, 3.14)))
+  end
+  
+  method ForwardMethod1 : Integer => return 42
+  
+  method ForwardMethod2(p: Integer) : Integer => return p.Mult(2)
+  
+  method ForwardMethod3(p: Integer, q: Real) : Real => return Real(p).Plus(q)
+end
+
+class Main is
+  method Assert(cond: Boolean) => IO.print(value)
+
+  this() is
+    var test : ForwardTest()
+
+    Main.Assert( test.TestForward().Equal(Integer(57)) )
+  end
+end

@@ -1,0 +1,47 @@
+class TestCtor is
+  var value : Integer(0)
+  this()
+  this(p: Integer) is
+   value = p
+  end
+  this(p: Real) is
+   value = Integer(p);
+
+  method Get : Integer => value
+end
+
+class DoubleCtor extends TestCtor is
+  this()
+  this(p: Integer) is
+   value = p.Mult(2)
+  end
+  this(p: Real) is
+   value = Integer(p).Mult(2)
+  end
+end
+
+class NoCtor is
+  method Get42 => Integer(42)
+end 
+
+class Main is
+  method Assert(cond: Boolean) => IO.print(cond)
+  end
+
+  this() is
+   var defalut : TestCtor()
+   var simple : TestCtor(5)
+   var cast : TestCtor(5,2)
+   var doubleInt : DoubleCtor(5)
+   var doubleReal : DoubleCtor(5,9)
+   var num : NoCtor
+	
+   Main.Assert( default.Get().Equal(Integer(0)) )
+   Main.Assert( simple.Get().Equal(Integer(5)) )
+   Main.Assert( cast.Get().Equal(Integer(5)) )
+   Main.Assert( doubleInt.Get().Equal(Integer(10)) )
+   Main.Assert( doubleReal.Get().Equal(Integer(10)) )
+   Main.Assert( num.Get42().Equal(Integer(42)) )
+
+   end
+end
