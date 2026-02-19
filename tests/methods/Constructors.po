@@ -1,0 +1,28 @@
+class Point is
+  var x : Integer
+  var y : Integer
+  var check : Integer
+
+  this(ax: Integer, ay: Integer) is
+    x := ax
+    y := ay
+  end
+end
+
+
+class Main is
+  method Assert(cond: Boolean) => IO.print(value)
+
+  this() is
+    var p1 : Point(Point(3, 4))
+    Main.Assert( p1.x.Equal(Integer(3)) )
+    Main.Assert( p1.y.Equal(Integer(4)) )
+
+    Main.Assert( Point(0, 0).x.Equal(Integer(0)) )
+
+    var p2 : Point(Point(Integer(1).Plus(Integer(2)), Integer(10).Minus(Integer(7))))
+    Main.Assert( p2.x.Equal(Integer(3)) )
+    Main.Assert( p2.y.Equal(Integer(3)) )
+    return
+  end
+end

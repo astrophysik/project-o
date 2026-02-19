@@ -1,0 +1,49 @@
+class Point is
+  var x : Integer
+  var y : Integer
+
+  this(ax: Integer, ay: Integer) is
+    x := ax
+    y := ay
+  end
+
+  method X : Integer => x
+  method Y : Integer => y
+
+  method Sum : Integer => x.Plus(y)
+
+  method Replace(dx: Integer, dy: Integer) is
+    x := x.Plus(dx)
+    y := y.Plus(dy)
+  end
+
+  method ReplaceAndSum(dx: Integer, dy: Integer) : Integer is
+    this.Move(dx, dy)
+    return this.Sum
+  end
+end
+
+
+class PointMethodsTest is
+  method Assert(cond: Boolean) => IO.print(value)
+
+  this() is
+    var p : Point(Point(3, 4))
+
+    this.Assert( p.X.Equal(Integer(3)) )
+    this.Assert( p.Y.Equal(Integer(4)) )
+    this.Assert( p.Sum.Equal(Integer(7)) )
+
+    p.Replace(Integer(1), Integer(-2))
+    this.Assert( p.X.Equal(Integer(1)) )
+    this.Assert( p.Y.Equal(Integer(-2)) )
+    this.Assert( p.Sum.Equal(Integer(-1)) )
+
+    var s : Integer(p.ReplaceAndSum(Integer(10), Integer(1)))
+    this.Assert( s.Equal(Integer(11)) )
+    this.Assert( p.X.Equal(Integer(10)) )
+    this.Assert( p.Y.Equal(Integer(1)) )
+
+    return
+  end
+end
