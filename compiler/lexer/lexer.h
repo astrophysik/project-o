@@ -84,7 +84,7 @@ struct lexeme_parser {
                            .end_pos = column_num + 1},
                      .value = "=>"};
       } else {
-        return std::nullopt;
+        return std::nullopt; // todo error here
       }
       break;
     case '\n':
