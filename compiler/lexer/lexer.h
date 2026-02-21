@@ -19,7 +19,6 @@ struct lexeme_parser {
 
   std::optional<token> take_next_token() noexcept {
     skip_whitespace();
-    // skip comment
     auto symbol_opt{take_next_symbol()};
 
     if (!symbol_opt.has_value()) {
@@ -87,6 +86,14 @@ struct lexeme_parser {
         return std::nullopt; // todo error here
       }
       break;
+    case '/':
+      if (auto next_symbol{peek_next_symbol()}; next_symbol.has_value() &&
+          next_symbol == '/') {
+        std::ignore = take_next_symbol();
+        skip_comment();
+      } else {
+        // division
+      }
     case '\n':
       return token{.type = token_type::tok_new_line,
                    .span{.line_num = line_num,
@@ -112,6 +119,16 @@ private:
           *next_symbol != '\n') { // \n is tok_new_line, so we shouldn't skip it
         take_next_symbol();
       }
+    }
+  }
+
+  void skip_comment() noexcept {
+    while (true) {
+      auto current_symbol{peek_next_symbol()};
+      if (!current_symbol.has_value() || *current_symbol == '\n') {
+        break;
+      }
+      take_next_symbol();
     }
   }
 
