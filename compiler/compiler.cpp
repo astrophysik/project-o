@@ -19,5 +19,5 @@ int main(int argc, char* argv[]) {
    std::string file_content((std::istreambuf_iterator<char>(s)), std::istreambuf_iterator<char>());
 
    auto tokens = lexer::tokenize_text("(), \n=> // asdf asdf\n//yhaseufu\n=>");
-   std::print("{}", tokens);
+   std::println("{}", tokens);
 }
