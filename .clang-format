@@ -4,7 +4,7 @@ BasedOnStyle:                     LLVM
 ColumnLimit:                      160
 PointerAlignment:                 Left
 ReferenceAlignment:               Pointer
-Standard:                         c++23
+Standard:                         c++20
 UseTab:                           Never
 SortIncludes:                     CaseSensitive
 RemoveSemicolon:                  true
