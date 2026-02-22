@@ -15,14 +15,14 @@ struct span {
 enum class token_type {
 
   tok_assignment, // :=
-  tok_fat_arrow, // =>
+  tok_fat_arrow,  // =>
 
   tok_new_line, // \n
-  tok_colon, // :
-  tok_dot, // .
-  tok_comma, // ,
+  tok_colon,    // :
+  tok_dot,      // .
+  tok_comma,    // ,
 
-  tok_open_par, // (
+  tok_open_par,  // (
   tok_close_par, // )
 
   tok_end
@@ -35,8 +35,7 @@ struct token {
 };
 
 namespace impl_ {
-inline constexpr std::string_view
-token_type_to_string(token_type type) noexcept {
+inline constexpr std::string_view token_type_to_string(token_type type) noexcept {
   switch (type) {
   case token_type::tok_assignment:
     return "tok_assignment";
@@ -59,7 +58,7 @@ token_type_to_string(token_type type) noexcept {
     return "tok_end";
 
   case token_type::tok_new_line:
-    return "tok_end";
+    return "tok_new_line";
   }
   return "tok_unknown";
 }
@@ -68,29 +67,28 @@ token_type_to_string(token_type type) noexcept {
 
 } // namespace lexer
 
-template <> struct std::formatter<lexer::span> {
-  template <typename ParseContext>
-  constexpr auto parse(ParseContext &ctx) const noexcept {
+template<>
+struct std::formatter<lexer::span> {
+  template<typename ParseContext>
+  constexpr auto parse(ParseContext& ctx) const noexcept {
     return ctx.begin();
   }
 
-  template <typename FmtContext>
-  auto format(const lexer::span &span, FmtContext &ctx) const noexcept {
-    return std::format_to(ctx.out(), "{}:{}-{}", span.line_num, span.start_pos,
-                          span.end_pos);
+  template<typename FmtContext>
+  auto format(const lexer::span& span, FmtContext& ctx) const noexcept {
+    return std::format_to(ctx.out(), "{}:{}-{}", span.line_num, span.start_pos, span.end_pos);
   }
 };
 
-template <> struct std::formatter<lexer::token> {
-  template <typename ParseContext>
-  constexpr auto parse(ParseContext &ctx) const noexcept {
+template<>
+struct std::formatter<lexer::token> {
+  template<typename ParseContext>
+  constexpr auto parse(ParseContext& ctx) const noexcept {
     return ctx.begin();
   }
 
-  template <typename FmtContext>
-  auto format(const lexer::token &token, FmtContext &ctx) const noexcept {
-    return std::format_to(ctx.out(), "type = {}, span = {}, value = \"{}\"",
-                          lexer::impl_::token_type_to_string(token.type),
-                          token.span, token.value);
+  template<typename FmtContext>
+  auto format(const lexer::token& token, FmtContext& ctx) const noexcept {
+    return std::format_to(ctx.out(), "{{type = {}, span = {}, value = \"{}\"}}", lexer::impl_::token_type_to_string(token.type), token.span, token.value);
   }
 };
