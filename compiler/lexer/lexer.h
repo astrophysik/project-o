@@ -107,11 +107,11 @@ struct lexeme_parser {
 
 private:
   void skip_whitespace() noexcept {
-    if (auto next_symbol{peek_next_symbol()}; next_symbol != std::nullopt) {
-      if (std::isspace(*next_symbol) &&
-          *next_symbol != '\n') { // \n is tok_new_line, so we shouldn't skip it
-        take_next_symbol();
-      }
+    for (auto next_symbol{peek_next_symbol()};
+         next_symbol.has_value() && std::isspace(*next_symbol) &&
+         *next_symbol != '\n';
+         next_symbol = peek_next_symbol()) {
+      std::ignore = take_next_symbol();
     }
   }
 
