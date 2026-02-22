@@ -18,8 +18,16 @@ struct lexeme_parser {
       : text(text), line_num{}, column_num{} {}
 
   std::optional<token> take_next_token() noexcept {
+    // skip whitespaces
     skip_whitespace();
-    // skip comment
+
+    // skip comments
+    auto is_valid_comment = skip_comment();
+    if (not is_valid_comment) {
+      return std::nullopt; // error
+    }
+
+    // process meaningful token
     auto symbol_opt{take_next_symbol()};
 
     if (!symbol_opt.has_value()) {
@@ -113,6 +121,30 @@ private:
          next_symbol = peek_next_symbol()) {
       std::ignore = take_next_symbol();
     }
+  }
+
+  bool skip_comment() noexcept {
+    if (auto next_symbol{peek_next_symbol()}; next_symbol.has_value() &&
+        *next_symbol == '/') {
+      take_next_symbol();
+      if (auto next_symbol{peek_next_symbol()}; next_symbol.has_value() &&
+          *next_symbol == '/') {
+        // it is valid comment (drop everything to end of line)
+        take_next_symbol();
+
+        while (true) {
+          auto current_symbol{peek_next_symbol()};
+          if (!current_symbol.has_value() || *current_symbol == '\n') {
+            break;
+          }
+          take_next_symbol();
+        }
+      } else {
+        // it is not valid comment
+        return false;
+      }
+    }
+    return true;
   }
 
   std::optional<char> take_next_symbol() noexcept {

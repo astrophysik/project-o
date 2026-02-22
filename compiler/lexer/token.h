@@ -14,16 +14,16 @@ struct span {
 
 enum class token_type {
 
-  tok_assignment,
-  tok_fat_arrow,
+  tok_assignment, // :=
+  tok_fat_arrow, // =>
 
-  tok_new_line,
-  tok_colon,
-  tok_dot,
-  tok_comma,
+  tok_new_line, // \n
+  tok_colon, // :
+  tok_dot, // .
+  tok_comma, // ,
 
-  tok_open_par,
-  tok_close_par,
+  tok_open_par, // (
+  tok_close_par, // )
 
   tok_end
 };
