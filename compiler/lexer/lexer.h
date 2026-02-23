@@ -149,7 +149,7 @@ inline std::expected<std::vector<token>, std::string> tokenize_text(std::string_
     if (!token_opt.has_value()) {
       return tokens;
     }
-    tokens.push_back(*token_opt);
+    tokens.push_back(std::move(*token_opt));
   }
 }
 
