@@ -1,8 +1,12 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <string>
+#include <variant>
+
+#include "compiler/type-traits/type-functions.h"
 
 namespace lexer {
 
@@ -31,7 +35,7 @@ enum class token_type {
 struct token {
   token_type type;
   span span;
-  std::string value;
+  std::variant<int64_t, double, std::string> value;
 };
 
 namespace impl_ {
@@ -89,6 +93,18 @@ struct std::formatter<lexer::token> {
 
   template<typename FmtContext>
   auto format(const lexer::token& token, FmtContext& ctx) const noexcept {
-    return std::format_to(ctx.out(), "{{type = {}, span = {}, value = \"{}\"}}", lexer::impl_::token_type_to_string(token.type), token.span, token.value);
+    return std::visit(overloaded{[&](int64_t value) {
+                                   return std::format_to(ctx.out(), "{{type = {}, span = {}, value = \"{}\"}}", lexer::impl_::token_type_to_string(token.type),
+                                                         token.span, value);
+                                 },
+                                 [&](double value) {
+                                   return std::format_to(ctx.out(), "{{type = {}, span = {}, value = \"{}\"}}", lexer::impl_::token_type_to_string(token.type),
+                                                         token.span, value);
+                                 },
+                                 [&](const std::string& value) {
+                                   return std::format_to(ctx.out(), "{{type = {}, span = {}, value = \"{}\"}}", lexer::impl_::token_type_to_string(token.type),
+                                                         token.span, value);
+                                 }},
+                      token.value);
   }
 };
