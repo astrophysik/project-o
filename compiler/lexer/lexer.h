@@ -16,22 +16,22 @@ namespace lexer {
 
 namespace impl_ {
 
-inline const std::unordered_map<std::string_view, keyword_value::type> keywords = {
-  {"class", keyword_value::type::kw_class},
-  {"extends", keyword_value::type::kw_extends},
-  {"is", keyword_value::type::kw_is},
-  {"var", keyword_value::type::kw_var},
-  {"method", keyword_value::type::kw_method},
-  {"if", keyword_value::type::kw_if},
-  {"then", keyword_value::type::kw_then},
-  {"else", keyword_value::type::kw_else},
-  {"while", keyword_value::type::kw_while},
-  {"loop", keyword_value::type::kw_loop},
-  {"return", keyword_value::type::kw_return},
-  {"end", keyword_value::type::kw_end},
-  {"this", keyword_value::type::kw_this},
-  {"true", keyword_value::type::kw_true},
-  {"false", keyword_value::type::kw_false}
+inline const std::unordered_map<std::string_view, token_type> keywords = {
+  {"class", token_type::tok_kw_class},
+  {"extends", token_type::tok_kw_extends},
+  {"is", token_type::tok_kw_is},
+  {"var", token_type::tok_kw_var},
+  {"method", token_type::tok_kw_method},
+  {"if", token_type::tok_kw_if},
+  {"then", token_type::tok_kw_then},
+  {"else", token_type::tok_kw_else},
+  {"while", token_type::tok_kw_while},
+  {"loop", token_type::tok_kw_loop},
+  {"return", token_type::tok_kw_return},
+  {"end", token_type::tok_kw_end},
+  {"this", token_type::tok_kw_this},
+  {"true", token_type::tok_kw_true},
+  {"false", token_type::tok_kw_false}
 };
 
 inline bool is_identifier_char(char c, bool first_char = false) noexcept {
@@ -53,11 +53,7 @@ struct lexeme_parser {
     skip_comment();
 
     if (auto ident_token{try_identificator_or_keyword()}; ident_token.has_value()) {
-      if ((*(*ident_token)).type != token_type::tok_unknown) {
-         return ident_token;
-      } // else not error and not identifier token
-    } else {
-      return ident_token;
+      return *ident_token;
     }
 
     auto symbol_opt{take_next_symbol()};
@@ -70,29 +66,29 @@ struct lexeme_parser {
 
     switch (symbol) {
     case '(':
-      return token{.type = token_type::tok_open_par, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = open_par_value{}};
+      return token{.type = token_type::tok_open_par, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "("};
     case ')':
-      return token{.type = token_type::tok_close_par, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = close_par_value{}};
+      return token{.type = token_type::tok_close_par, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ")"};
     case ':':
       if (auto next_symbol{peek_next_symbol().value_or(' ')}; next_symbol == '=') {
         std::ignore = take_next_symbol();
-        return token{.type = token_type::tok_assignment, .span{.line_num = line_num, .start_pos = column_num - 1, .end_pos = column_num + 1}, .value = assignment_value{}};
+        return token{.type = token_type::tok_assignment, .span{.line_num = line_num, .start_pos = column_num - 1, .end_pos = column_num + 1}, .value = ":="};
       } else {
-        return token{.type = token_type::tok_colon, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = colon_value{}};
+        return token{.type = token_type::tok_colon, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ":="};
       }
     case '.':
-      return token{.type = token_type::tok_dot, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = dot_value{}};
+      return token{.type = token_type::tok_dot, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "."};
     case ',':
-      return token{.type = token_type::tok_comma, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = comma_value{}};
+      return token{.type = token_type::tok_comma, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ","};
     case '=':
       if (auto next_symbol{peek_next_symbol().value_or(' ')}; next_symbol == '>') {
         std::ignore = take_next_symbol();
-        return token{.type = token_type::tok_fat_arrow, .span{.line_num = line_num, .start_pos = column_num - 1, .end_pos = column_num + 1}, .value = fat_arrow_value{}};
+        return token{.type = token_type::tok_fat_arrow, .span{.line_num = line_num, .start_pos = column_num - 1, .end_pos = column_num + 1}, .value = "=>"};
       } else {
         return std::unexpected{std::format("unknown token \'{}\' at line : {}, column : {}", symbol, line_num, column_num)};
       }
     case '\n':
-      return token{.type = token_type::tok_new_line, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = new_line_value{}};
+      return token{.type = token_type::tok_new_line, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "\\n"};
       // todo:
       // - parse tok_int, tok_real (int.int)
     }
@@ -151,24 +147,20 @@ private:
 
       if (auto it = keywords.find(ident); it != keywords.end()) {
         return token{
-          .type = token_type::tok_keyword,
+          .type = it->second,
           .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
-          .value = keyword_value{.kind = it->second}
+          .value = std::string(ident)
         };
       } else {
         return token{
           .type = token_type::tok_identifier,
           .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
-          .value = identifier_value{.name = std::string(ident)}
+          .value = std::string(ident)
         };
       }
     }
 
-    return token{
-      .type = token_type::tok_unknown,
-      .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
-      .value = identifier_value{.name = ""}
-    };
+    return std::unexpected{std::format("didn't found keyword or identifier")};
   }
 
   std::optional<char> take_next_symbol() noexcept {

@@ -22,59 +22,28 @@ enum class token_type : uint8_t {
   tok_comma,      // ,
   tok_open_par,   // (
   tok_close_par,  // )
-  tok_keyword,    // class, extends, is, var, method, if, then, else, while, loop, return, end, this, true, false
   tok_identifier, // var/class/method names
   tok_eof,        // EOF
-  tok_unknown
+
+  // keywords
+  tok_kw_class,
+  tok_kw_extends,
+  tok_kw_is,
+  tok_kw_var,
+  tok_kw_method,
+  tok_kw_if,
+  tok_kw_then,
+  tok_kw_else,
+  tok_kw_while,
+  tok_kw_loop,
+  tok_kw_return,
+  tok_kw_end,
+  tok_kw_this,
+  tok_kw_true,
+  tok_kw_false
 };
 
-struct assignment_value {};
-struct fat_arrow_value {};
-struct new_line_value {};
-struct colon_value {};
-struct dot_value {};
-struct comma_value {};
-struct open_par_value {};
-struct close_par_value {};
-struct keyword_value {
-  enum class type : uint8_t {
-    kw_class,
-    kw_extends,
-    kw_is,
-    kw_var,
-    kw_method,
-    kw_if,
-    kw_then,
-    kw_else,
-    kw_while,
-    kw_loop,
-    kw_return,
-    kw_end,
-    kw_this,
-    kw_true,
-    kw_false
-  } kind;
-};
-struct identifier_value {
-  std::string name;
-};
-struct eof_value {};
-struct unknown_value {};
-
-using token_value = std::variant<
-  assignment_value,
-  fat_arrow_value,
-  new_line_value,
-  colon_value,
-  dot_value,
-  comma_value,
-  open_par_value,
-  close_par_value,
-  keyword_value,
-  identifier_value,
-  eof_value,
-  unknown_value
->;
+using token_value = std::variant<int, double, std::string>;
 
 struct token {
   token_type type;
@@ -95,68 +64,59 @@ struct token {
 namespace impl_ {
 inline constexpr std::string_view token_type_to_string(token_type type) noexcept {
   switch (type) {
-  case token_type::tok_assignment:
-    return "tok_assignment";
-  case token_type::tok_fat_arrow:
-    return "tok_fat_arrow";
-  case token_type::tok_new_line:
-    return "tok_new_line";
-  case token_type::tok_colon:
-    return "tok_colon";
-  case token_type::tok_dot:
-    return "tok_dot";
-  case token_type::tok_comma:
-    return "tok_comma";
-  case token_type::tok_open_par:
-    return "tok_oppar";
-  case token_type::tok_close_par:
-    return "tok_clpar";
-  case token_type::tok_keyword:
-    return "tok_keyword";
-  case token_type::tok_identifier:
-    return "tok_identifier";
-  case token_type::tok_eof:
-    return "tok_eof";
-  case token_type::tok_unknown:
-    return "tok_unknown";
-  }
-}
-
-inline std::string_view keyword_to_string(keyword_value::type kw) noexcept {
-  switch (kw) {
-    case keyword_value::type::kw_class:
-      return "class";
-    case keyword_value::type::kw_extends: 
-      return "extends";
-    case keyword_value::type::kw_is: 
-      return "is";
-    case keyword_value::type::kw_var: 
-      return "var";
-    case keyword_value::type::kw_method: 
-      return "method";
-    case keyword_value::type::kw_if: 
-      return "if";
-    case keyword_value::type::kw_then: 
-      return "then";
-    case keyword_value::type::kw_else: 
-      return "else";
-    case keyword_value::type::kw_while: 
-      return "while";
-    case keyword_value::type::kw_loop: 
-      return "loop";
-    case keyword_value::type::kw_return: 
-      return "return";
-    case keyword_value::type::kw_end: 
-      return "end";
-    case keyword_value::type::kw_this: 
-      return "this";
-    case keyword_value::type::kw_true: 
-      return "true";
-    case keyword_value::type::kw_false: 
-      return "false";
+    case token_type::tok_assignment:
+      return "tok_assignment";
+    case token_type::tok_fat_arrow:
+      return "tok_fat_arrow";
+    case token_type::tok_new_line:
+      return "tok_new_line";
+    case token_type::tok_colon:
+      return "tok_colon";
+    case token_type::tok_dot:
+      return "tok_dot";
+    case token_type::tok_comma:
+      return "tok_comma";
+    case token_type::tok_open_par:
+      return "tok_oppar";
+    case token_type::tok_close_par:
+      return "tok_clpar";
+    case token_type::tok_identifier:
+      return "tok_identifier";
+    case token_type::tok_eof:
+      return "tok_eof";
+    case token_type::tok_kw_class:
+      return "tok_kw_class";
+    case token_type::tok_kw_extends: 
+      return "tok_kw_extends";
+    case token_type::tok_kw_is: 
+      return "tok_kw_is";
+    case token_type::tok_kw_var: 
+      return "tok_kw_var";
+    case token_type::tok_kw_method: 
+      return "tok_kw_method";
+    case token_type::tok_kw_if: 
+      return "tok_kw_if";
+    case token_type::tok_kw_then: 
+      return "tok_kw_then";
+    case token_type::tok_kw_else: 
+      return "tok_kw_else";
+    case token_type::tok_kw_while: 
+      return "tok_kw_while";
+    case token_type::tok_kw_loop: 
+      return "tok_kw_loop";
+    case token_type::tok_kw_return: 
+      return "tok_kw_return";
+    case token_type::tok_kw_end: 
+      return "tok_kw_end";
+    case token_type::tok_kw_this: 
+      return "tok_kw_this";
+    case token_type::tok_kw_true: 
+      return "tok_kw_true";
+    case token_type::tok_kw_false: 
+      return "tok_kw_false";
   }
 
-  return "unknown";
+  return "tok_unknown";
 }
 
 } // namespace impl_
@@ -188,16 +148,19 @@ struct std::formatter<lexer::token> {
     auto token_type = lexer::impl_::token_type_to_string(token.type);
     
     return std::visit([&](const auto& val) -> decltype(auto) {
-      using T = std::decay_t<decltype(val)>;
+      using ValueType = std::decay_t<decltype(val)>;
       
-      if constexpr (std::is_same_v<T, lexer::keyword_value>) {
+      if constexpr (std::is_same_v<ValueType, int>) {
         return std::format_to(ctx.out(), "{{type = {}, span = {}, value = \"{}\"}}\n", 
-                              token_type, token.span, lexer::impl_::keyword_to_string(val.kind));
-      } else if constexpr (std::is_same_v<T, lexer::identifier_value>) {
+                              token_type, token.span, val);
+      } else if constexpr (std::is_same_v<ValueType, double>) {
         return std::format_to(ctx.out(), "{{type = {}, span = {}, value = \"{}\"}}\n", 
-                              token_type, token.span, val.name);
+                              token_type, token.span, val);
+      } else if constexpr (std::is_same_v<ValueType, std::string>) {
+        return std::format_to(ctx.out(), "{{type = {}, span = {}, value = \"{}\"}}\n", 
+                              token_type, token.span, val);
       } else {
-        return std::format_to(ctx.out(), "{{type = {}, span = {}}}\n", token_type, token.span);
+        return std::format_to(ctx.out(), "{{type = {}, span = {}, value = \"unknown_value\"}}\n", token_type, token.span);
       }
     }, token.value);
   }
