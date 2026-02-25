@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cctype>
 #include <cstddef>
 #include <expected>
@@ -7,12 +8,38 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <unordered_map>
 
 #include "compiler/lexer/token.h"
 
 namespace lexer {
 
 namespace impl_ {
+
+inline const std::unordered_map<std::string_view, token_type> keywords = {
+  {"class", token_type::tok_kw_class},
+  {"extends", token_type::tok_kw_extends},
+  {"is", token_type::tok_kw_is},
+  {"var", token_type::tok_kw_var},
+  {"method", token_type::tok_kw_method},
+  {"if", token_type::tok_kw_if},
+  {"then", token_type::tok_kw_then},
+  {"else", token_type::tok_kw_else},
+  {"while", token_type::tok_kw_while},
+  {"loop", token_type::tok_kw_loop},
+  {"return", token_type::tok_kw_return},
+  {"end", token_type::tok_kw_end},
+  {"this", token_type::tok_kw_this},
+  {"true", token_type::tok_kw_true},
+  {"false", token_type::tok_kw_false}
+};
+
+inline bool is_identifier_char(char c, bool first_char = false) noexcept {
+  if (first_char) {
+    return std::isalpha(c) != 0 || c == '_';
+  }
+  return std::isalnum(c) != 0 || c == '_';
+}
 
 struct lexeme_parser {
 
@@ -25,6 +52,10 @@ struct lexeme_parser {
     skip_whitespace();
     skip_comment();
 
+    if (auto ident_token{try_identificator_or_keyword()}; ident_token.has_value()) {
+      return *ident_token;
+    }
+
     auto symbol_opt{take_next_symbol()};
 
     if (!symbol_opt.has_value()) {
@@ -36,24 +67,19 @@ struct lexeme_parser {
     switch (symbol) {
     case '(':
       return token{.type = token_type::tok_open_par, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "("};
-      break;
     case ')':
       return token{.type = token_type::tok_close_par, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ")"};
-      break;
     case ':':
       if (auto next_symbol{peek_next_symbol().value_or(' ')}; next_symbol == '=') {
         std::ignore = take_next_symbol();
         return token{.type = token_type::tok_assignment, .span{.line_num = line_num, .start_pos = column_num - 1, .end_pos = column_num + 1}, .value = ":="};
       } else {
-        return token{.type = token_type::tok_colon, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ":"};
+        return token{.type = token_type::tok_colon, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ":="};
       }
-      break;
     case '.':
       return token{.type = token_type::tok_dot, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "."};
-      break;
     case ',':
       return token{.type = token_type::tok_comma, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ","};
-      break;
     case '=':
       if (auto next_symbol{peek_next_symbol().value_or(' ')}; next_symbol == '>') {
         std::ignore = take_next_symbol();
@@ -61,20 +87,13 @@ struct lexeme_parser {
       } else {
         return std::unexpected{std::format("unknown token \'{}\' at line : {}, column : {}", symbol, line_num, column_num)};
       }
-      break;
     case '\n':
       return token{.type = token_type::tok_new_line, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "\\n"};
-      break;
       // todo:
-      // - parse tok_int, tok_real (int.int) , tok_bool
-      // - parse name => after check is name is keyword and which by swich
-      // case for keywords
-      //
-    default:
-      return std::unexpected{std::format("unknown token \'{}\' at line : {}, column : {}", symbol, line_num, column_num)};
+      // - parse tok_int, tok_real (int.int)
     }
 
-    return std::nullopt;
+    return std::unexpected{std::format("unknown token \'{}\' at line : {}, column : {}", symbol, line_num, column_num)};
   }
 
 private:
@@ -101,6 +120,49 @@ private:
     }
   }
 
+  std::expected<std::optional<token>, std::string> try_identificator_or_keyword() {
+    auto symbol_opt{peek_next_symbol()};
+
+    if (!symbol_opt.has_value()) {
+      return std::nullopt;
+    }
+
+    char symbol{*symbol_opt};
+
+    size_t start_col = column_num + 1;
+    if (is_identifier_char(symbol, true)) {
+      size_t length = 1;
+
+      auto next_symbol{peek_next_symbol(length).value_or(' ')};
+      while (is_identifier_char(next_symbol)) {
+        length++;
+        next_symbol = peek_next_symbol(length).value_or(' ');
+      }
+
+      auto ident_opt = take_sequence(length);
+      if (not ident_opt.has_value()) {
+        return std::unexpected{std::format("tried to get sequence out of text at line : {}, from : {} to : {}", line_num, column_num, column_num + length)};
+      }
+      auto ident = *ident_opt;
+
+      if (auto it = keywords.find(ident); it != keywords.end()) {
+        return token{
+          .type = it->second,
+          .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
+          .value = std::string(ident)
+        };
+      } else {
+        return token{
+          .type = token_type::tok_identifier,
+          .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
+          .value = std::string(ident)
+        };
+      }
+    }
+
+    return std::unexpected{std::format("didn't found keyword or identifier")};
+  }
+
   std::optional<char> take_next_symbol() noexcept {
     if (text.empty()) {
       return std::nullopt;
@@ -117,6 +179,28 @@ private:
 
     text.remove_prefix(1);
     return symbol;
+  }
+
+  std::optional<std::string_view> take_sequence(size_t length) noexcept {
+    if (text.empty() or length > text.size()) {
+      return std::nullopt;
+    }
+
+    std::string_view char_seq{text.substr(0, length)};
+
+    auto new_line_symbols{std::ranges::count(char_seq, '\n')};
+    if (new_line_symbols > 0) { // multi-line sequence
+      auto last_new_line_symbol{char_seq.find_last_of('\n')};
+      
+      column_num = char_seq.size() - last_new_line_symbol + 1;
+      line_num += new_line_symbols;
+    } else { // one-line sequence
+      column_num += length;
+    }
+
+    text.remove_prefix(length);
+
+    return char_seq;
   }
 
   std::optional<char> peek_next_symbol(size_t pos = 0) noexcept {
