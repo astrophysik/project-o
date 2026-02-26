@@ -23,6 +23,8 @@ enum class token_type : uint8_t {
   tok_open_par,   // (
   tok_close_par,  // )
   tok_identifier, // var/class/method names
+  tok_int,        //integer literal
+  tok_real,       //float literal
   tok_eof,        // EOF
 
   // keywords
@@ -82,6 +84,10 @@ inline constexpr std::string_view token_type_to_string(token_type type) noexcept
       return "tok_clpar";
     case token_type::tok_identifier:
       return "tok_identifier";
+    case token_type::tok_int:
+      return "tok_int";
+    case token_type::tok_real:
+      return "tok_real";
     case token_type::tok_eof:
       return "tok_eof";
     case token_type::tok_kw_class:

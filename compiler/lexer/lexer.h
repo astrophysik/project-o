@@ -41,6 +41,10 @@ inline bool is_identifier_char(char c, bool first_char = false) noexcept {
   return std::isalnum(c) != 0 || c == '_';
 }
 
+inline bool is_digit(char c) noexcept {
+  return std::isdigit(static_cast<unsigned char>(c));
+}
+
 struct lexeme_parser {
 
   lexeme_parser(std::string_view text) noexcept
@@ -53,6 +57,10 @@ struct lexeme_parser {
     skip_comment();
 
     if (auto ident_token{try_identificator_or_keyword()}; ident_token.has_value()) {
+      return *ident_token;
+    }
+
+    if (auto ident_token{try_number()}; ident_token.has_value()) {
       return *ident_token;
     }
 
@@ -74,7 +82,7 @@ struct lexeme_parser {
         std::ignore = take_next_symbol();
         return token{.type = token_type::tok_assignment, .span{.line_num = line_num, .start_pos = column_num - 1, .end_pos = column_num + 1}, .value = ":="};
       } else {
-        return token{.type = token_type::tok_colon, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ":="};
+        return token{.type = token_type::tok_colon, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ":"};
       }
     case '.':
       return token{.type = token_type::tok_dot, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "."};
@@ -89,8 +97,6 @@ struct lexeme_parser {
       }
     case '\n':
       return token{.type = token_type::tok_new_line, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "\\n"};
-      // todo:
-      // - parse tok_int, tok_real (int.int)
     }
 
     return std::unexpected{std::format("unknown token \'{}\' at line : {}, column : {}", symbol, line_num, column_num)};
@@ -161,6 +167,62 @@ private:
     }
 
     return std::unexpected{std::format("didn't found keyword or identifier")};
+  }
+
+  std::expected<std::optional<token>, std::string> try_number() {
+    auto symbol_opt{peek_next_symbol()};
+
+    if (!symbol_opt.has_value()) {
+      return std::nullopt;
+    }
+
+    char symbol{*symbol_opt};
+
+    size_t start_col = column_num + 1;
+    if (is_digit(symbol)) {
+      size_t length = 1;
+
+      auto next_symbol{peek_next_symbol(length).value_or(' ')};
+      while (is_digit(next_symbol)) {
+        length++;
+        next_symbol = peek_next_symbol(length).value_or(' ');
+      }
+
+      auto separator{peek_next_symbol(length).value_or(' ')};
+      auto after_separator{peek_next_symbol(length+1).value_or(' ')};
+      bool is_real(separator == '.' && is_digit(after_separator));
+
+      if (is_real) {
+        length++;
+        next_symbol = peek_next_symbol(length).value_or(' ');
+        while (is_digit(next_symbol)) {
+          length++;
+          next_symbol = peek_next_symbol(length).value_or(' ');
+        }
+      }
+
+      auto num_opt = take_sequence(length);
+      if (not num_opt.has_value()) {
+        return std::unexpected{std::format("tried to get sequence out of text at line : {}, from : {} to : {}", line_num, column_num, column_num + length)};
+      }
+      auto num = *num_opt;
+
+      if (is_real) {
+    return token{
+        .type = token_type::tok_real,
+        .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
+        .value = std::stod(std::string(num))
+    };
+    } else {
+        return token{
+            .type = token_type::tok_int,
+            .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
+            .value = std::stoi(std::string(num))
+        };
+}
+    }
+
+    return std::unexpected{std::format("didn't found number")};
   }
 
   std::optional<char> take_next_symbol() noexcept {
