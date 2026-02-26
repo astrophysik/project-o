@@ -1,0 +1,20 @@
+---
+Language:                         Cpp
+BasedOnStyle:                     LLVM
+ColumnLimit:                      160
+PointerAlignment:                 Left
+ReferenceAlignment:               Pointer
+Standard:                         c++20
+UseTab:                           Never
+SortIncludes:                     CaseSensitive
+RemoveSemicolon:                  true
+AllowShortFunctionsOnASingleLine: Empty
+PackConstructorInitializers:      Never
+SpaceAfterTemplateKeyword:        false
+AlwaysBreakTemplateDeclarations:  Yes
+IndentRequiresClause:             false
+RequiresClausePosition:           OwnLine
+IndentPPDirectives:               None
+InsertNewlineAtEOF:               true
+...
+
