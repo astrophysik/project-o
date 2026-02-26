@@ -82,7 +82,7 @@ struct lexeme_parser {
         std::ignore = take_next_symbol();
         return token{.type = token_type::tok_assignment, .span{.line_num = line_num, .start_pos = column_num - 1, .end_pos = column_num + 1}, .value = ":="};
       } else {
-        return token{.type = token_type::tok_colon, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ":="};
+        return token{.type = token_type::tok_colon, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ":"};
       }
     case '.':
       return token{.type = token_type::tok_dot, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "."};
