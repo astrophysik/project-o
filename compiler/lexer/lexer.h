@@ -207,11 +207,19 @@ private:
       }
       auto num = *num_opt;
 
-      return token{
-          .type = is_real ? token_type::tok_real : token_type::tok_int,
-          .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
-          .value = std::string(num)
+      if (is_real) {
+    return token{
+        .type = token_type::tok_real,
+        .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
+        .value = std::stod(std::string(num))
+    };
+    } else {
+        return token{
+            .type = token_type::tok_int,
+            .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
+            .value = std::stoi(std::string(num))
         };
+}
     }
 
     return std::unexpected{std::format("didn't found number")};
