@@ -23,6 +23,8 @@ enum class token_type : uint8_t {
   tok_open_par,   // (
   tok_close_par,  // )
   tok_identifier, // var/class/method names
+  tok_int,        //integer literal
+  tok_real,       //float literal
   tok_eof,        // EOF
 
   // keywords
