@@ -21,9 +21,5 @@ int main(int argc, char* argv[]) {
   std::string file_content((std::istreambuf_iterator<char>(s)), std::istreambuf_iterator<char>());
 
   auto tokens_res = lexer::tokenize_text(file_content);
-  if (tokens_res.has_value()) {
-    std::println("{}", *tokens_res);
-  } else {
-    std::println("{}", tokens_res.error());
-  }
+  std::println("{}", tokens_res);
 }
