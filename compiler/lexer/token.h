@@ -23,8 +23,8 @@ enum class token_type : uint8_t {
   tok_open_par,   // (
   tok_close_par,  // )
   tok_identifier, // var/class/method names
-  tok_int,        //integer literal
-  tok_real,       //float literal
+  tok_int,        // integer literal
+  tok_real,       // float literal
   tok_eof,        // EOF
 
   // keywords
@@ -42,7 +42,9 @@ enum class token_type : uint8_t {
   tok_kw_end,
   tok_kw_this,
   tok_kw_true,
-  tok_kw_false
+  tok_kw_false,
+
+  tok_unknown
 };
 
 using token_value = std::variant<int, double, std::string>;
@@ -120,9 +122,9 @@ inline constexpr std::string_view token_type_to_string(token_type type) noexcept
       return "tok_kw_true";
     case token_type::tok_kw_false: 
       return "tok_kw_false";
+    default:
+      return "tok_unknown";
   }
-
-  return "tok_unknown";
 }
 
 } // namespace impl_

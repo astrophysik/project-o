@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cctype>
 #include <cstddef>
-#include <expected>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -52,54 +51,58 @@ struct lexeme_parser {
         line_num{},
         column_num{} {}
 
-  std::expected<std::optional<token>, std::string> take_next_token() noexcept {
+  token take_next_token() noexcept {
     skip_whitespace();
     skip_comment();
 
-    if (auto ident_token{try_identificator_or_keyword()}; ident_token.has_value()) {
-      return *ident_token;
+    if (auto ident_token_opt{try_identificator_or_keyword()}; ident_token_opt.has_value()) {
+      return *ident_token_opt;
     }
 
-    if (auto ident_token{try_number()}; ident_token.has_value()) {
-      return *ident_token;
+    if (auto num_token_opt{try_number()}; num_token_opt.has_value()) {
+      return *num_token_opt;
     }
 
     auto symbol_opt{take_next_symbol()};
 
     if (!symbol_opt.has_value()) {
-      return std::nullopt;
+      return token{
+        .type = token_type::tok_eof,
+        .span = {.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1},
+        .value = ""
+      };
     }
 
     char symbol{*symbol_opt};
 
     switch (symbol) {
-    case '(':
-      return token{.type = token_type::tok_open_par, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "("};
-    case ')':
-      return token{.type = token_type::tok_close_par, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ")"};
-    case ':':
-      if (auto next_symbol{peek_next_symbol().value_or(' ')}; next_symbol == '=') {
-        std::ignore = take_next_symbol();
-        return token{.type = token_type::tok_assignment, .span{.line_num = line_num, .start_pos = column_num - 1, .end_pos = column_num + 1}, .value = ":="};
-      } else {
-        return token{.type = token_type::tok_colon, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ":"};
-      }
-    case '.':
-      return token{.type = token_type::tok_dot, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "."};
-    case ',':
-      return token{.type = token_type::tok_comma, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ","};
-    case '=':
-      if (auto next_symbol{peek_next_symbol().value_or(' ')}; next_symbol == '>') {
-        std::ignore = take_next_symbol();
-        return token{.type = token_type::tok_fat_arrow, .span{.line_num = line_num, .start_pos = column_num - 1, .end_pos = column_num + 1}, .value = "=>"};
-      } else {
-        return std::unexpected{std::format("unknown token \'{}\' at line : {}, column : {}", symbol, line_num, column_num)};
-      }
-    case '\n':
-      return token{.type = token_type::tok_new_line, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "\\n"};
+      case '(':
+        return token{.type = token_type::tok_open_par, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "("};
+      case ')':
+        return token{.type = token_type::tok_close_par, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ")"};
+      case ':':
+        if (auto next_symbol{peek_next_symbol().value_or(' ')}; next_symbol == '=') {
+          std::ignore = take_next_symbol();
+          return token{.type = token_type::tok_assignment, .span{.line_num = line_num, .start_pos = column_num - 1, .end_pos = column_num + 1}, .value = ":="};
+        } else {
+          return token{.type = token_type::tok_colon, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ":"};
+        }
+      case '.':
+        return token{.type = token_type::tok_dot, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "."};
+      case ',':
+        return token{.type = token_type::tok_comma, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ","};
+      case '=':
+        if (auto next_symbol{peek_next_symbol().value_or(' ')}; next_symbol == '>') {
+          std::ignore = take_next_symbol();
+          return token{.type = token_type::tok_fat_arrow, .span{.line_num = line_num, .start_pos = column_num - 1, .end_pos = column_num + 1}, .value = "=>"};
+        } else {
+          return token{.type = token_type::tok_unknown, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ""};
+        }
+      case '\n':
+        return token{.type = token_type::tok_new_line, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = "\\n"};
     }
 
-    return std::unexpected{std::format("unknown token \'{}\' at line : {}, column : {}", symbol, line_num, column_num)};
+    return token{.type = token_type::tok_unknown, .span{.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ""};
   }
 
 private:
@@ -126,11 +129,15 @@ private:
     }
   }
 
-  std::expected<std::optional<token>, std::string> try_identificator_or_keyword() {
+  std::optional<token> try_identificator_or_keyword() {
     auto symbol_opt{peek_next_symbol()};
 
     if (!symbol_opt.has_value()) {
-      return std::nullopt;
+      return token{
+        .type = token_type::tok_eof,
+        .span = {.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1},
+        .value = ""
+      };
     }
 
     char symbol{*symbol_opt};
@@ -147,7 +154,11 @@ private:
 
       auto ident_opt = take_sequence(length);
       if (not ident_opt.has_value()) {
-        return std::unexpected{std::format("tried to get sequence out of text at line : {}, from : {} to : {}", line_num, column_num, column_num + length)};
+        return token{
+          .type = token_type::tok_eof,
+          .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
+          .value = ""
+        };
       }
       auto ident = *ident_opt;
 
@@ -166,14 +177,18 @@ private:
       }
     }
 
-    return std::unexpected{std::format("didn't found keyword or identifier")};
+    return std::nullopt;
   }
 
-  std::expected<std::optional<token>, std::string> try_number() {
+  std::optional<token> try_number() {
     auto symbol_opt{peek_next_symbol()};
 
     if (!symbol_opt.has_value()) {
-      return std::nullopt;
+      return token{
+        .type = token_type::tok_eof,
+        .span = {.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1},
+        .value = ""
+      };
     }
 
     char symbol{*symbol_opt};
@@ -203,26 +218,30 @@ private:
 
       auto num_opt = take_sequence(length);
       if (not num_opt.has_value()) {
-        return std::unexpected{std::format("tried to get sequence out of text at line : {}, from : {} to : {}", line_num, column_num, column_num + length)};
+        return token{
+          .type = token_type::tok_eof,
+          .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
+          .value = ""
+        };
       }
       auto num = *num_opt;
 
       if (is_real) {
-    return token{
-        .type = token_type::tok_real,
-        .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
-        .value = std::stod(std::string(num))
-    };
-    } else {
         return token{
-            .type = token_type::tok_int,
-            .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
-            .value = std::stoi(std::string(num))
+          .type = token_type::tok_real,
+          .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
+          .value = std::stod(std::string(num))
         };
-}
+      } else {
+        return token{
+          .type = token_type::tok_int,
+          .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
+          .value = std::stoi(std::string(num))
+        };
+      }
     }
 
-    return std::unexpected{std::format("didn't found number")};
+    return std::nullopt;
   }
 
   std::optional<char> take_next_symbol() noexcept {
@@ -244,7 +263,7 @@ private:
   }
 
   std::optional<std::string_view> take_sequence(size_t length) noexcept {
-    if (text.empty() or length > text.size()) {
+    if (length > text.size()) {
       return std::nullopt;
     }
 
@@ -280,22 +299,19 @@ private:
 
 } // namespace impl_
 
-inline std::expected<std::vector<token>, std::string> tokenize_text(std::string_view text) noexcept {
+inline std::vector<token> tokenize_text(std::string_view text) noexcept {
   auto parser{impl_::lexeme_parser(text)};
 
   // reserve?
   std::vector<token> tokens;
 
   while (true) {
-    auto token_res{parser.take_next_token()};
-    if (!token_res.has_value()) {
-      return std::unexpected{std::move(token_res.error())};
-    }
-    auto token_opt{*token_res};
-    if (!token_opt.has_value()) {
+    auto token{parser.take_next_token()};
+    tokens.push_back(token);
+
+    if (token.type == token_type::tok_eof) {
       return tokens;
     }
-    tokens.push_back(*token_opt);
   }
 }
 
