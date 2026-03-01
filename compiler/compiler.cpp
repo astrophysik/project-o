@@ -12,18 +12,14 @@
 // virtual inheritance
 
 int main(int argc, char* argv[]) {
-  if (argc != 2) {
-    std::print("Usage: ./compiler <input_file>\n");
-    return 1;
-  }
+    if (argc != 2) {
+        std::print("Usage: ./compiler <input_file>\n");
+        return 1;
+    }
 
-  std::ifstream s(argv[1]);
-  std::string file_content((std::istreambuf_iterator<char>(s)), std::istreambuf_iterator<char>());
+    std::ifstream s(argv[1]);
+    std::string file_content((std::istreambuf_iterator<char>(s)), std::istreambuf_iterator<char>());
 
-  auto tokens_res = lexer::tokenize_text(file_content);
-  if (tokens_res.has_value()) {
-    std::println("{}", *tokens_res);
-  } else {
-    std::println("{}", tokens_res.error());
-  }
+    auto tokens_res = lexer::tokenize_text(file_content);
+    std::println("{}", tokens_res);
 }
