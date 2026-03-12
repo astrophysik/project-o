@@ -2,38 +2,38 @@
 
 namespace ast {
 
-class Visitor;
+class visitor;
 
 // base hierarchy
-class Entity;
-class Declaration;
-class Statement;
-class Expression;
+class entity;
+class declaration;
+class statement;
+class expression;
 
 // structural nodes
-class Block;
-class Program;
+class block;
+class program;
 
 // declarations
-class ClassDeclaration;
-class VariableDeclaration;
-class ParameterDeclaration;
-class MethodDeclaration;
-class ConstructorDeclaration;
+class class_declaration;
+class variable_declaration;
+class parameter_declaration;
+class method_declaration;
+class constructor_declaration;
 
 // statements
-class AssignmentStatement;
-class WhileStatement;
-class IfStatement;
-class ReturnStatement;
+class assignment_statement;
+class while_statement;
+class if_statement;
+class return_statement;
 
 // expressions
-class LiteralExpression;
-class ThisExpression;
-class IdentifierExpression;
-class ParameterizedIdentifierExpression;
-class MemberExpression;
-class CallExpression;
-class GroupingExpression;
+class literal_expression;
+class this_expression;
+class identifier_expression;
+class parameterized_identifier_expression;
+class member_expression;
+class call_expression;
+class grouping_expression;
 
 } // namespace ast

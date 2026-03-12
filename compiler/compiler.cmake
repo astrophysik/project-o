@@ -4,8 +4,14 @@ set(COMPILER_MAIN
     ${COMPILER_DIR}/compiler.cpp
 )
 
+set(COMPILER_PARSER
+    ${COMPILER_DIR}/parser/ast.cpp
+    ${COMPILER_DIR}/parser/parser.cpp
+)
+
 set(COMPILER_SOURCES
     ${COMPILER_MAIN}
+    ${COMPILER_PARSER}
 )
 
 add_executable(compiler ${COMPILER_SOURCES})

@@ -4,28 +4,28 @@
 
 namespace ast {
 
-class Visitor {
+class visitor {
 public:
-    virtual ~Visitor() = default;
+    virtual ~visitor() = default;
 
-    virtual void visit(Program& node) = 0;
-    virtual void visit(Block& node) = 0;
-    virtual void visit(ClassDeclaration& node) = 0;
-    virtual void visit(VariableDeclaration& node) = 0;
-    virtual void visit(ParameterDeclaration& node) = 0;
-    virtual void visit(MethodDeclaration& node) = 0;
-    virtual void visit(ConstructorDeclaration& node) = 0;
-    virtual void visit(AssignmentStatement& node) = 0;
-    virtual void visit(WhileStatement& node) = 0;
-    virtual void visit(IfStatement& node) = 0;
-    virtual void visit(ReturnStatement& node) = 0;
-    virtual void visit(LiteralExpression& node) = 0;
-    virtual void visit(ThisExpression& node) = 0;
-    virtual void visit(IdentifierExpression& node) = 0;
-    virtual void visit(ParameterizedIdentifierExpression& node) = 0;
-    virtual void visit(MemberExpression& node) = 0;
-    virtual void visit(CallExpression& node) = 0;
-    virtual void visit(GroupingExpression& node) = 0;
+    virtual void visit(program& node) = 0;
+    virtual void visit(block& node) = 0;
+    virtual void visit(class_declaration& node) = 0;
+    virtual void visit(variable_declaration& node) = 0;
+    virtual void visit(parameter_declaration& node) = 0;
+    virtual void visit(method_declaration& node) = 0;
+    virtual void visit(constructor_declaration& node) = 0;
+    virtual void visit(assignment_statement& node) = 0;
+    virtual void visit(while_statement& node) = 0;
+    virtual void visit(if_statement& node) = 0;
+    virtual void visit(return_statement& node) = 0;
+    virtual void visit(literal_expression& node) = 0;
+    virtual void visit(this_expression& node) = 0;
+    virtual void visit(identifier_expression& node) = 0;
+    virtual void visit(parameterized_identifier_expression& node) = 0;
+    virtual void visit(member_expression& node) = 0;
+    virtual void visit(call_expression& node) = 0;
+    virtual void visit(grouping_expression& node) = 0;
 };
 
-}
+} // namespace ast

@@ -9,260 +9,260 @@
 
 namespace ast {
 
-class Entity {
+class entity {
 public:
-    virtual ~Entity() = default;
-    virtual void accept(Visitor& visitor) = 0;
+    virtual ~entity() = default;
+    virtual void accept(visitor& visitor) = 0;
 };
 
-class Declaration : public Entity {};
+class declaration : public entity {};
 
-class Statement : public Entity {};
+class statement : public entity {};
 
-class Expression : public Entity {};
+class expression : public entity {};
 
-class Block : public Entity {
+class block : public entity {
 public:
-    std::vector<std::unique_ptr<Entity>> items;
+    std::vector<std::unique_ptr<entity>> items;
 
-    Block() = default;
-    explicit Block(std::vector<std::unique_ptr<Entity>> items)
+    block() = default;
+    explicit block(std::vector<std::unique_ptr<entity>> items)
         : items(std::move(items)) {}
 
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
-class Program : public Entity {
+class program : public entity {
 public:
-    std::vector<std::unique_ptr<ClassDeclaration>> classes;
+    std::vector<std::unique_ptr<class_declaration>> classes;
 
-    Program() = default;
-    explicit Program(std::vector<std::unique_ptr<ClassDeclaration>> cls)
+    program() = default;
+    explicit program(std::vector<std::unique_ptr<class_declaration>> cls)
         : classes(std::move(cls)) {}
 
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
 // |------------|
-// |Declarations|
+// |declarations|
 // |------------|
-class ClassDeclaration : public Declaration {
+class class_declaration : public declaration {
 public:
     std::string name;
-    std::vector<std::string> typeParameters; // for Array[int]??? or better IntArray???
-    std::optional<std::string> baseClass;
-    std::vector<std::unique_ptr<VariableDeclaration>> fields;
-    std::vector<std::unique_ptr<MethodDeclaration>> methods;
-    std::vector<std::unique_ptr<ConstructorDeclaration>> constructors;
+    std::vector<std::string> type_parameters; // for Array[int]??? or better IntArray???
+    std::optional<std::string> base_class;
+    std::vector<std::unique_ptr<variable_declaration>> fields;
+    std::vector<std::unique_ptr<method_declaration>> methods;
+    std::vector<std::unique_ptr<constructor_declaration>> constructors;
 
-    ClassDeclaration(std::string name, std::vector<std::string> typeParameters, std::optional<std::string> baseClass,
-                     std::vector<std::unique_ptr<VariableDeclaration>> fields, std::vector<std::unique_ptr<MethodDeclaration>> methods,
-                     std::vector<std::unique_ptr<ConstructorDeclaration>> constructors)
+    class_declaration(std::string name, std::vector<std::string> type_parameters, std::optional<std::string> base_class,
+                     std::vector<std::unique_ptr<variable_declaration>> fields, std::vector<std::unique_ptr<method_declaration>> methods,
+                     std::vector<std::unique_ptr<constructor_declaration>> constructors)
         : name(std::move(name)),
-          typeParameters(std::move(typeParameters)),
-          baseClass(std::move(baseClass)),
+          type_parameters(std::move(type_parameters)),
+          base_class(std::move(base_class)),
           fields(std::move(fields)),
           methods(std::move(methods)),
           constructors(std::move(constructors)) {}
 
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
 /**
  *   var x : 10
  *   ^^^^^^^^^^
  */
-class VariableDeclaration : public Declaration {
+class variable_declaration : public declaration {
 public:
     std::string name;
-    std::unique_ptr<Expression> initializer;
+    std::unique_ptr<expression> initializer;
 
-    VariableDeclaration(std::string name, std::unique_ptr<Expression> init)
+    variable_declaration(std::string name, std::unique_ptr<expression> init)
         : name(std::move(name)),
           initializer(std::move(init)) {}
 
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
-class ParameterDeclaration : public Declaration {
+class parameter_declaration : public declaration {
 public:
     std::string name;
-    std::string typeName; // TODO: type hierarchy, not string
+    std::string type_name; // TODO: type hierarchy, not string
 
-    ParameterDeclaration(std::string n, std::string t)
+    parameter_declaration(std::string n, std::string t)
         : name(std::move(n)),
-          typeName(std::move(t)) {}
+          type_name(std::move(t)) {}
 
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
-class MethodDeclaration : public Declaration {
+class method_declaration : public declaration {
 public:
     std::string name;
-    std::vector<std::unique_ptr<ParameterDeclaration>> parameters;
-    std::optional<std::string> returnType; // nothing or type. TODO: type hierarchy, not string
-    std::optional<std::variant<std::unique_ptr<Block>, std::unique_ptr<Expression>>> body;
+    std::vector<std::unique_ptr<parameter_declaration>> parameters;
+    std::optional<std::string> return_type; // nothing or type. TODO: type hierarchy, not string
+    std::optional<std::variant<std::unique_ptr<block>, std::unique_ptr<expression>>> body;
 
-    MethodDeclaration(std::string name, std::vector<std::unique_ptr<ParameterDeclaration>> params, std::optional<std::string> ret,
-                      std::optional<std::variant<std::unique_ptr<Block>, std::unique_ptr<Expression>>> body)
+    method_declaration(std::string name, std::vector<std::unique_ptr<parameter_declaration>> params, std::optional<std::string> ret,
+                      std::optional<std::variant<std::unique_ptr<block>, std::unique_ptr<expression>>> body)
         : name(std::move(name)),
           parameters(std::move(params)),
-          returnType(std::move(ret)),
+          return_type(std::move(ret)),
           body(std::move(body)) {}
 
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
-class ConstructorDeclaration : public Declaration {
+class constructor_declaration : public declaration {
 public:
-    std::vector<std::unique_ptr<ParameterDeclaration>> parameters;
-    std::unique_ptr<Block> body;
+    std::vector<std::unique_ptr<parameter_declaration>> parameters;
+    std::unique_ptr<block> body;
 
-    ConstructorDeclaration(std::vector<std::unique_ptr<ParameterDeclaration>> params, std::unique_ptr<Block> body)
+    constructor_declaration(std::vector<std::unique_ptr<parameter_declaration>> params, std::unique_ptr<block> body)
         : parameters(std::move(params)),
           body(std::move(body)) {}
 
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
 // |----------|
-// |Statements|
+// |statements|
 // |----------|
 /**
  *   x := 55
  *   ^^^^^^^
  */
-class AssignmentStatement : public Statement {
+class assignment_statement : public statement {
 public:
     std::string target;
-    std::unique_ptr<Expression> value;
+    std::unique_ptr<expression> value;
 
-    AssignmentStatement(std::string t, std::unique_ptr<Expression> v)
+    assignment_statement(std::string t, std::unique_ptr<expression> v)
         : target(std::move(t)),
           value(std::move(v)) {}
 
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
-class WhileStatement : public Statement {
+class while_statement : public statement {
 public:
-    std::unique_ptr<Expression> condition;
-    std::unique_ptr<Block> body;
+    std::unique_ptr<expression> condition;
+    std::unique_ptr<block> body;
 
-    WhileStatement(std::unique_ptr<Expression> cond, std::unique_ptr<Block> body)
+    while_statement(std::unique_ptr<expression> cond, std::unique_ptr<block> body)
         : condition(std::move(cond)),
           body(std::move(body)) {}
 
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
-class IfStatement : public Statement {
+class if_statement : public statement {
 public:
-    std::unique_ptr<Expression> condition;
-    std::unique_ptr<Block> trueBranch;
-    std::unique_ptr<Block> falseBranch;
+    std::unique_ptr<expression> condition;
+    std::unique_ptr<block> true_branch;
+    std::unique_ptr<block> false_branch;
 
-    IfStatement(std::unique_ptr<Expression> cond, std::unique_ptr<Block> t, std::unique_ptr<Block> f)
+    if_statement(std::unique_ptr<expression> cond, std::unique_ptr<block> t, std::unique_ptr<block> f)
         : condition(std::move(cond)),
-          trueBranch(std::move(t)),
-          falseBranch(std::move(f)) {}
+          true_branch(std::move(t)),
+          false_branch(std::move(f)) {}
 
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
-class ReturnStatement : public Statement {
+class return_statement : public statement {
 public:
-    std::unique_ptr<Expression> value;
+    std::unique_ptr<expression> value;
 
-    explicit ReturnStatement(std::unique_ptr<Expression> v)
+    explicit return_statement(std::unique_ptr<expression> v)
         : value(std::move(v)) {}
 
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
 // |-----------|
-// |Expressions|
+// |expressions|
 // |-----------|
-class LiteralExpression : public Expression {
+class literal_expression : public expression {
 public:
-    enum class Type { Integer, Real, Boolean } type;
+    enum class type { integer, real, boolean } type;
     std::variant<int64_t, double, bool> value;
 
-    LiteralExpression(int64_t v)
-        : type(Type::Integer),
+    literal_expression(int64_t v)
+        : type(type::integer),
           value(v) {}
-    LiteralExpression(double v)
-        : type(Type::Real),
+    literal_expression(double v)
+        : type(type::real),
           value(v) {}
-    LiteralExpression(bool v)
-        : type(Type::Boolean),
+    literal_expression(bool v)
+        : type(type::boolean),
           value(v) {}
 
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
-class ThisExpression : public Expression {
+class this_expression : public expression {
 public:
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
-class IdentifierExpression : public Expression {
+class identifier_expression : public expression {
 public:
     std::string name;
 
-    explicit IdentifierExpression(std::string n)
+    explicit identifier_expression(std::string n)
         : name(std::move(n)) {}
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
 /**
  * Array[Integer]
  * ^^^^^^^^^^^^^^
  */
-class ParameterizedIdentifierExpression : public Expression {
+class parameterized_identifier_expression : public expression {
 public:
     std::string name;
-    std::vector<std::string> typeArguments;
+    std::vector<std::string> type_arguments;
 
-    ParameterizedIdentifierExpression(std::string n, std::vector<std::string> args)
+    parameterized_identifier_expression(std::string n, std::vector<std::string> args)
         : name(std::move(n)),
-          typeArguments(std::move(args)) {}
-    void accept(Visitor& visitor) override;
+          type_arguments(std::move(args)) {}
+    void accept(visitor& visitor) override;
 };
 
 /**
  * obj.field
  * ^^^^^^^^^
  */
-class MemberExpression : public Expression {
+class member_expression : public expression {
 public:
-    std::unique_ptr<Expression> object;
+    std::unique_ptr<expression> object;
     std::string member;
 
-    MemberExpression(std::unique_ptr<Expression> obj, std::string mem)
+    member_expression(std::unique_ptr<expression> obj, std::string mem)
         : object(std::move(obj)),
           member(std::move(mem)) {}
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
-class CallExpression : public Expression {
+class call_expression : public expression {
 public:
-    std::unique_ptr<Expression> callee;
-    std::vector<std::unique_ptr<Expression>> arguments;
+    std::unique_ptr<expression> callee;
+    std::vector<std::unique_ptr<expression>> arguments;
 
-    CallExpression(std::unique_ptr<Expression> c, std::vector<std::unique_ptr<Expression>> args)
+    call_expression(std::unique_ptr<expression> c, std::vector<std::unique_ptr<expression>> args)
         : callee(std::move(c)),
           arguments(std::move(args)) {}
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
-class GroupingExpression : public Expression {
+class grouping_expression : public expression {
 public:
-    std::unique_ptr<Expression> inner;
+    std::unique_ptr<expression> inner;
 
-    explicit GroupingExpression(std::unique_ptr<Expression> expr)
+    explicit grouping_expression(std::unique_ptr<expression> expr)
         : inner(std::move(expr)) {}
-    void accept(Visitor& visitor) override;
+    void accept(visitor& visitor) override;
 };
 
 } // namespace ast
