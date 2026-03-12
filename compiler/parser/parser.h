@@ -1,10 +1,10 @@
 #pragma once
 
-#include "compiler/lexer/token.h"
 #include "ast_fwd.h"
-#include <vector>
+#include "compiler/lexer/token.h"
 #include <memory>
-#include <string>
+#include <string_view>
+#include <vector>
 
 namespace parser {
 
@@ -29,12 +29,12 @@ private:
     bool match(lexer::token_type type);
     const lexer::token& peek() const;
     const lexer::token& previous() const;
-    const lexer::token& consume(lexer::token_type expected, const std::string& message);
+    const lexer::token& consume(lexer::token_type expected, const std::string_view message);
 
     std::unique_ptr<ast::program> parse_program();
     std::unique_ptr<ast::block> parse_block();
     std::unique_ptr<ast::class_declaration> parse_class_declaration();
-    std::unique_ptr<ast::member_expression> parse_member_expression();
+    std::unique_ptr<ast::entity> parse_member_expression();
     std::unique_ptr<ast::variable_declaration> parse_variable_declaration();
     std::unique_ptr<ast::method_declaration> parse_method_declaration();
     std::vector<std::unique_ptr<ast::parameter_declaration>> parse_parameters();
@@ -47,8 +47,8 @@ private:
     std::unique_ptr<ast::return_statement> parse_return();
     std::unique_ptr<ast::expression> parse_expression();
     std::unique_ptr<ast::expression> parse_primary();
-    std::vector<std::unique_ptr<ast::expression>> parse_arguments();  // список выражений в скобках
-    std::vector<std::string> parse_type_arguments(); // список идентификаторов в квадратных скобках
+    std::vector<std::unique_ptr<ast::expression>> parse_arguments();
+    std::vector<std::string> parse_type_arguments();
 };
 
 } // namespace parser

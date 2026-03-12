@@ -3,13 +3,7 @@
 #include <string>
 
 #include "compiler/lexer/lexer.h"
-
-// General todo:
-// - add parse tok_int, tok_real (int.int) , tok_bool, others
-// - add parse names, keywords (parse name => after check is name is keyword and
-// which by swich)
-// - now token value is just string. Maybe it should be redone by variant or
-// virtual inheritance
+#include "compiler/parser/parser.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {

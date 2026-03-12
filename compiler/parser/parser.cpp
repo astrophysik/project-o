@@ -1,8 +1,7 @@
-#include "../lexer/lexer.h"
 #include "parser.h"
+#include "../lexer/lexer.h"
+#include "ast.h"
 #include <format>
-#include <iostream>
-#include <string_view>
 
 namespace parser {
 
@@ -10,7 +9,8 @@ parser::parser(std::vector<lexer::token> tokens)
     : tokens(std::move(tokens)) {}
 
 void parser::advance() {
-    if (current < tokens.size()) ++current;
+    if (current < tokens.size())
+        ++current;
 }
 
 void parser::skip_newlines() {
@@ -33,12 +33,14 @@ bool parser::match(lexer::token_type type) {
 }
 
 const lexer::token& parser::peek() const {
-    if (current >= tokens.size()) return tokens.back(); // tok_eof
+    if (current >= tokens.size())
+        return tokens.back(); // tok_eof
     return tokens[current];
 }
 
 const lexer::token& parser::previous() const {
-    if (current == 0) return tokens[0];
+    if (current == 0)
+        return tokens[0];
     return tokens[current - 1];
 }
 
@@ -153,10 +155,7 @@ std::unique_ptr<ast::parameter_declaration> parser::parse_parameter() {
 
     // parameter type
     auto type = consume(lexer::token_type::tok_identifier, "Expected type name");
-    return std::make_unique<ast::parameter_declaration>(
-        std::get<std::string>(name.value),
-        std::get<std::string>(type.value)
-    );
+    return std::make_unique<ast::parameter_declaration>(std::get<std::string>(name.value), std::get<std::string>(type.value));
 }
 
 std::unique_ptr<ast::method_declaration> parser::parse_method_declaration() {
@@ -184,7 +183,7 @@ std::unique_ptr<ast::method_declaration> parser::parse_method_declaration() {
         // end
         consume(lexer::token_type::tok_kw_end, "Expected 'end' after method body");
         method->body = std::move(body_items);
-    // =>
+        // =>
     } else if (match(lexer::token_type::tok_fat_arrow)) {
         // expr
         auto expr = parse_expression();
@@ -325,7 +324,7 @@ std::unique_ptr<ast::expression> parser::parse_expression() {
         if (match(lexer::token_type::tok_open_par)) {
             // method arguments
             auto args = parse_arguments();
-            
+
             // call expr
             auto member_expr = std::make_unique<ast::member_expression>(std::move(expr), member);
             expr = std::make_unique<ast::call_expression>(std::move(member_expr), std::move(args));
@@ -366,7 +365,7 @@ std::unique_ptr<ast::expression> parser::parse_primary() {
         // identifier
         std::string id = std::get<std::string>(previous().value);
         auto expr = std::make_unique<ast::identifier_expression>(id);
-        
+
         // TODO: can constructor call be here?
         return expr;
     }
