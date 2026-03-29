@@ -1,5 +1,11 @@
-#include "ast.h"
-#include "ast_visitor.h"
+#include "compiler/ast/ast.h"
+
+#include <string>
+#include <vector>
+#include <utility>
+#include <memory>
+
+#include "compiler/ast/ast-visitor.h"
 
 namespace ast {
 

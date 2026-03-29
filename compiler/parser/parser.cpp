@@ -1,12 +1,16 @@
-#include "parser.h"
-#include "../lexer/lexer.h"
-#include "ast.h"
+#include "compiler/parser/parser.h"
+
 #include <format>
+#include <memory>
+#include <vector>
+
+#include "compiler/ast/ast.h"
+#include "compiler/lexer/token.h"
 
 namespace parser {
 
-parser::parser(std::vector<lexer::token> tokens)
-    : tokens(std::move(tokens)) {}
+parser::parser(std::vector<lexer::token> _tokens)
+    : tokens(std::move(_tokens)) {}
 
 void parser::advance() {
     if (current < tokens.size())
@@ -32,19 +36,19 @@ bool parser::match(lexer::token_type type) {
     return false;
 }
 
-const lexer::token& parser::peek() const {
+lexer::token parser::peek() const {
     if (current >= tokens.size())
         return tokens.back(); // tok_eof
     return tokens[current];
 }
 
-const lexer::token& parser::previous() const {
+lexer::token parser::previous() const {
     if (current == 0)
         return tokens[0];
     return tokens[current - 1];
 }
 
-const lexer::token& parser::consume(lexer::token_type expected, std::string_view message) {
+lexer::token parser::consume(lexer::token_type expected, std::string_view message) {
     if (check(expected)) {
         auto tok = peek();
         advance();
@@ -92,6 +96,18 @@ std::unique_ptr<ast::class_declaration> parser::parse_class_declaration() {
     // members
     while (!check(lexer::token_type::tok_kw_end) && !check(lexer::token_type::tok_eof)) {
         auto member = parse_member_expression();
+
+        if (auto var_decl = dynamic_cast<ast::variable_declaration*>(member.get())) {
+            member.release();
+            class_decl->fields.push_back(std::unique_ptr<ast::variable_declaration>(var_decl));
+        } else if (auto method_decl = dynamic_cast<ast::method_declaration*>(member.get())) {
+            member.release();
+            class_decl->methods.push_back(std::unique_ptr<ast::method_declaration>(method_decl));
+        } else if (auto ctor_decl = dynamic_cast<ast::constructor_declaration*>(member.get())) {
+            member.release();
+            class_decl->constructors.push_back(std::unique_ptr<ast::constructor_declaration>(ctor_decl));
+        }
+
         skip_newlines();
     }
     consume(lexer::token_type::tok_kw_end, "Expected 'end' to close class");
@@ -245,6 +261,9 @@ std::unique_ptr<ast::statement> parser::parse_statement() {
         // return
         return parse_return();
     }
+    if (match(lexer::token_type::tok_kw_var)) {
+        return parse_variable_declaration();
+    }
     return nullptr;
 }
 
@@ -365,9 +384,13 @@ std::unique_ptr<ast::expression> parser::parse_primary() {
         // identifier
         std::string id = std::get<std::string>(previous().value);
         auto expr = std::make_unique<ast::identifier_expression>(id);
-
-        // TODO: can constructor call be here?
-        return expr;
+        if (match(lexer::token_type::tok_open_par)) {
+            auto args = parse_arguments();
+            auto member_expr = std::make_unique<ast::member_expression>(std::move(expr), id);
+            return std::make_unique<ast::call_expression>(std::move(member_expr), std::move(args));
+        } else {
+            return expr;
+        }
     }
 
     // prioritization

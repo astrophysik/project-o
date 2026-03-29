@@ -1,11 +1,12 @@
 #pragma once
 
-#include "ast_fwd.h"
 #include <cstdint>
 #include <optional>
 #include <string>
 #include <variant>
 #include <vector>
+
+#include "compiler/ast/ast-forward-declarations.h"
 
 namespace ast {
 
@@ -47,7 +48,7 @@ public:
  *   var x : 10
  *   ^^^^^^^^^^
  */
-class variable_declaration : public declaration {
+class variable_declaration : public statement {
 public:
     std::string name;
     std::unique_ptr<expression> initializer;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ast_fwd.h"
+#include "compiler/ast/ast-forward-declarations.h"
 
 namespace ast {
 

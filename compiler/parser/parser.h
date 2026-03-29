@@ -1,10 +1,11 @@
 #pragma once
 
-#include "ast_fwd.h"
-#include "compiler/lexer/token.h"
 #include <memory>
 #include <string_view>
 #include <vector>
+
+#include "compiler/ast/ast.h"
+#include "compiler/lexer/token.h"
 
 namespace parser {
 
@@ -27,9 +28,9 @@ private:
     void skip_newlines();
     bool check(lexer::token_type type) const;
     bool match(lexer::token_type type);
-    const lexer::token& peek() const;
-    const lexer::token& previous() const;
-    const lexer::token& consume(lexer::token_type expected, const std::string_view message);
+    lexer::token peek() const;
+    lexer::token previous() const;
+    lexer::token consume(lexer::token_type expected, std::string_view message);
 
     std::unique_ptr<ast::program> parse_program();
     std::unique_ptr<ast::block> parse_block();

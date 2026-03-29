@@ -36,7 +36,7 @@ struct lexeme_parser {
 
     lexeme_parser(std::string_view text) noexcept
         : text(text),
-          line_num{},
+          line_num{1},
           column_num{} {}
 
     token take_next_token() noexcept {
@@ -254,7 +254,7 @@ struct lexeme_parser {
     }
 
     std::string_view text;
-    size_t line_num;
+    size_t line_num{1};
     size_t column_num;
 };
 
