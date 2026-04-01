@@ -25,6 +25,7 @@ private:
     size_t current{0};
 
     void advance();
+    void retreat();
     void skip_newlines();
     bool check(lexer::token_type type) const;
     bool match(lexer::token_type type);
@@ -41,7 +42,7 @@ private:
     std::vector<std::unique_ptr<ast::parameter_declaration>> parse_parameters();
     std::unique_ptr<ast::parameter_declaration> parse_parameter();
     std::unique_ptr<ast::constructor_declaration> parse_constructor_declaration();
-    std::unique_ptr<ast::statement> parse_statement();
+    std::unique_ptr<ast::entity> parse_statement();
     std::unique_ptr<ast::assignment_statement> parse_assignment();
     std::unique_ptr<ast::while_statement> parse_while();
     std::unique_ptr<ast::if_statement> parse_if();

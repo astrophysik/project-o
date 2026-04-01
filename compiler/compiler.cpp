@@ -14,8 +14,15 @@ int main(int argc, char* argv[]) {
 
     std::ifstream s(argv[1]);
     std::string file_content((std::istreambuf_iterator<char>(s)), std::istreambuf_iterator<char>());
+
+    // lexer
     auto tokens_res = lexer::tokenize_text(file_content);
+    std::println("{}", tokens_res);
+
+    // parser
     auto parser = parser::parser(tokens_res);
+
+    // ast
     auto ast = parser.parse();
     analysis::print_program_ast(ast);
 }

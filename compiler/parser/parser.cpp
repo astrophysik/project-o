@@ -6,6 +6,7 @@
 
 #include "compiler/ast/ast.h"
 #include "compiler/lexer/token.h"
+#include "parser.h"
 
 namespace parser {
 
@@ -15,6 +16,11 @@ parser::parser(std::vector<lexer::token> _tokens)
 void parser::advance() {
     if (current < tokens.size())
         ++current;
+}
+
+void parser::retreat() {
+    if (current > 0)
+        --current;
 }
 
 void parser::skip_newlines() {
@@ -54,7 +60,7 @@ lexer::token parser::consume(lexer::token_type expected, std::string_view messag
         advance();
         return tok;
     }
-    throw parse_error(std::format("{} at line {}", message, peek().span.line_num));
+    throw parse_error(std::format("{} at line {} pos {}:{}", message, peek().span.line_num, peek().span.start_pos, peek().span.end_pos));
 }
 
 std::unique_ptr<ast::program> parser::parse() {
@@ -230,23 +236,31 @@ std::unique_ptr<ast::constructor_declaration> parser::parse_constructor_declarat
 std::unique_ptr<ast::block> parser::parse_block() {
     std::vector<std::unique_ptr<ast::entity>> items;
 
+    skip_newlines();
     while (not check(lexer::token_type::tok_kw_end) && not check(lexer::token_type::tok_eof)) {
         if (match(lexer::token_type::tok_kw_var)) {
             // var
             items.push_back(parse_variable_declaration());
         } else {
-            // statements
+            // statements + method call
             items.push_back(parse_statement());
         }
+        skip_newlines();
     }
 
     return std::make_unique<ast::block>(std::move(items));
 }
 
-std::unique_ptr<ast::statement> parser::parse_statement() {
+std::unique_ptr<ast::entity> parser::parse_statement() {
     skip_newlines();
-    if (check(lexer::token_type::tok_identifier)) {
+    if (match(lexer::token_type::tok_identifier)) {
+        // call class method (expression)
+        if (check(lexer::token_type::tok_dot)) {
+            retreat();
+            return parse_expression();
+        }
         // assign
+        retreat();
         return parse_assignment();
     }
     if (match(lexer::token_type::tok_kw_while)) {
@@ -260,9 +274,6 @@ std::unique_ptr<ast::statement> parser::parse_statement() {
     if (match(lexer::token_type::tok_kw_return)) {
         // return
         return parse_return();
-    }
-    if (match(lexer::token_type::tok_kw_var)) {
-        return parse_variable_declaration();
     }
     return nullptr;
 }
@@ -345,8 +356,7 @@ std::unique_ptr<ast::expression> parser::parse_expression() {
             auto args = parse_arguments();
 
             // call expr
-            auto member_expr = std::make_unique<ast::member_expression>(std::move(expr), member);
-            expr = std::make_unique<ast::call_expression>(std::move(member_expr), std::move(args));
+            expr = std::make_unique<ast::call_expression>(std::move(expr), std::move(args));
         } else {
             // field access
             expr = std::make_unique<ast::member_expression>(std::move(expr), member);
@@ -386,8 +396,7 @@ std::unique_ptr<ast::expression> parser::parse_primary() {
         auto expr = std::make_unique<ast::identifier_expression>(id);
         if (match(lexer::token_type::tok_open_par)) {
             auto args = parse_arguments();
-            auto member_expr = std::make_unique<ast::member_expression>(std::move(expr), id);
-            return std::make_unique<ast::call_expression>(std::move(member_expr), std::move(args));
+            return std::make_unique<ast::call_expression>(std::move(expr), std::move(args));
         } else {
             return expr;
         }
@@ -399,7 +408,7 @@ std::unique_ptr<ast::expression> parser::parse_primary() {
         consume(lexer::token_type::tok_close_par, "Expected ')' after grouped expression");
         return std::make_unique<ast::grouping_expression>(std::move(inner));
     }
-    throw parse_error(std::format("Unexpected token at line {}", peek().span.line_num));
+    throw parse_error(std::format("Unexpected token at line {} pos {}:{}", peek().span.line_num, peek().span.start_pos, peek().span.end_pos));
 }
 
 std::vector<std::unique_ptr<ast::expression>> parser::parse_arguments() {
