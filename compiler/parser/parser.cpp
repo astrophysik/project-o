@@ -356,7 +356,8 @@ std::unique_ptr<ast::expression> parser::parse_expression() {
             auto args = parse_arguments();
 
             // call expr
-            expr = std::make_unique<ast::call_expression>(std::move(expr), std::move(args));
+            auto member_expr = std::make_unique<ast::member_expression>(std::move(expr), member);
+            expr = std::make_unique<ast::call_expression>(std::move(member_expr), std::move(args));
         } else {
             // field access
             expr = std::make_unique<ast::member_expression>(std::move(expr), member);
@@ -396,7 +397,8 @@ std::unique_ptr<ast::expression> parser::parse_primary() {
         auto expr = std::make_unique<ast::identifier_expression>(id);
         if (match(lexer::token_type::tok_open_par)) {
             auto args = parse_arguments();
-            return std::make_unique<ast::call_expression>(std::move(expr), std::move(args));
+            auto member_expr = std::make_unique<ast::member_expression>(std::move(expr), id);
+            return std::make_unique<ast::call_expression>(std::move(member_expr), std::move(args));
         } else {
             return expr;
         }

@@ -236,7 +236,6 @@ void ast_printer::visit(ast::call_expression& node) {
         arg->accept(*this);
     }
     indent -= 2;
-    indent--;
 }
 
 void ast_printer::visit(ast::grouping_expression& node) {
