@@ -3,17 +3,17 @@ class Main is
   end
 
   this() is
-    var l : List[Integer]()
+    var l : ListInteger()
     l := l.append(Integer(10))
     l := l.append(Integer(20))
     l := l.append(Integer(30))
 
     Main.Assert( l.head().Equal(Integer(10)) )
 
-    var t1 : List[Integer](l.tail())
+    var t1 : ListInteger(l.tail())
     Main.Assert( t1.head().Equal(Integer(20)) )
 
-    var t2 : List[Integer](t1.tail())
+    var t2 : ListInteger(t1.tail())
     Main.Assert( t2.head().Equal(Integer(30)) )
 
     //reference-semantic

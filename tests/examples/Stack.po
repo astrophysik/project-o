@@ -1,9 +1,9 @@
 class IntStack is
-    var elements : Array[Integer]
+    var elements : ArrayInteger
     var top : 0
 
     this(capacity: Integer) is
-        elements := Array[Integer](capacity)
+        elements := ArrayInteger(capacity)
         top := 0
     end
 
@@ -14,21 +14,21 @@ class IntStack is
         end
     end
 
-    method pop : Integer is
+    method pop() : Integer is
         top := top.Minus(1)
         return elements.get(top)
     end
 
-    method isEmpty : Boolean => top.Equal(0)
+    method isEmpty() : Boolean => top.Equal(0)
 end
 
 class Main is
     this() is
-        var st : IntStack := IntStack(10)
+        var st : IntStack(10)
         st.push(10)
         st.push(20)
         st.push(30)
-        var x : Integer := st.pop
-        var y : Integer := st.pop
+        var x : st.pop
+        var y : st.pop
     end
 end
