@@ -92,7 +92,7 @@ std::unique_ptr<ast::class_declaration> parser::parse_class_declaration() {
         // base class name
         auto base_tok = consume(lexer::token_type::tok_identifier, "Expected base class name");
         class_decl->base_class = std::get<std::string>(base_tok.value);
-        skip_newlines();
+        // skip_newlines();
     }
 
     // is
@@ -134,7 +134,7 @@ std::unique_ptr<ast::entity> parser::parse_member_expression() {
     if (match(lexer::token_type::tok_kw_this)) {
         return parse_constructor_declaration();
     }
-    throw parse_error(std::format("Expected class member at line {}", peek().span.line_num));
+    throw parse_error(std::format("Expected class member definition at line {} pos {}:{}", peek().span.line_num, peek().span.start_pos, peek().span.end_pos));
 }
 
 std::unique_ptr<ast::variable_declaration> parser::parse_variable_declaration() {
@@ -144,8 +144,10 @@ std::unique_ptr<ast::variable_declaration> parser::parse_variable_declaration() 
     auto name_tok = consume(lexer::token_type::tok_identifier, "Expected variable name");
     var_decl->name = std::get<std::string>(name_tok.value);
 
+    // :
     consume(lexer::token_type::tok_colon, "Expected ':' after variable name");
 
+    // expr
     var_decl->initializer = parse_expression();
     return var_decl;
 }
@@ -172,7 +174,7 @@ std::unique_ptr<ast::parameter_declaration> parser::parse_parameter() {
     // parameter name
     auto name = consume(lexer::token_type::tok_identifier, "Expected parameter name");
 
-    // colon
+    // :
     consume(lexer::token_type::tok_colon, "Expected ':'");
 
     // parameter type
@@ -241,6 +243,7 @@ std::unique_ptr<ast::block> parser::parse_block() {
             // var
             items.push_back(parse_variable_declaration());
         } else if (auto statement{parse_statement()}; statement != nullptr) {
+            // statements + call expr
             items.push_back(std::move(statement));
         } else {
             break;
@@ -251,7 +254,7 @@ std::unique_ptr<ast::block> parser::parse_block() {
 
 std::unique_ptr<ast::entity> parser::parse_statement() {
     skip_newlines();
-    if (match(lexer::token_type::tok_identifier)) {
+    if (match(lexer::token_type::tok_identifier) or match(lexer::token_type::tok_kw_this)) {
         // call class method (expression)
         if (check(lexer::token_type::tok_dot)) {
             retreat();
