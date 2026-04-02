@@ -1,0 +1,6 @@
+class Main is
+  this() is
+    var x : true
+    x := Integer(42)
+  end
+end

@@ -1,0 +1,10 @@
+class Main is
+  method test() is
+    var temp : Integer(0)
+    temp := Integer(42)
+  end
+
+  this() is
+    var i : test()
+  end
+end

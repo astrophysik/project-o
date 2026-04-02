@@ -1,0 +1,14 @@
+class Main is
+  this() is
+    var three : Integer(3)
+    var five : Integer(5)
+    var ten : Integer(10)
+    var res : false
+
+    if three.Less(ten) then
+      if three.Less(five) then 
+        res := true
+      end
+    end
+  end
+end

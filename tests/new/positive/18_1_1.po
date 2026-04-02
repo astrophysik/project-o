@@ -1,0 +1,13 @@
+class Main is
+  method double(a:Integer) : Integer is
+    return a.Mult(2)
+  end
+  
+  this() is
+    var x : Integer(0)
+    x := 17
+    x := Integer(42)
+    x := double(x)
+    x := Integer(10).Plus(Integer(2))
+  end
+end

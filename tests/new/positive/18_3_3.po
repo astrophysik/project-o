@@ -1,0 +1,19 @@
+class Main is
+  method returnFromIf() : Integer is
+    if true then
+      return Integer(42)
+    end
+  end
+
+  this() is   
+    if true then
+      var res : false
+      res := true
+      var i : 0
+      while i.Less(Integer(5)) loop
+        i :=i.Plus(1)
+      end
+      var int : returnFromIf()
+    end
+  end
+end

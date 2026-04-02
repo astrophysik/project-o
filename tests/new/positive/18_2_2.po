@@ -1,0 +1,9 @@
+class Main is
+  this() is
+    var i : Boolean(false)
+
+    while i.Equal(Boolean(true)) loop
+      i := true
+    end
+  end
+end

@@ -1,0 +1,6 @@
+class Main is
+  this() is
+    var one 
+    var two : Integer
+  end
+end

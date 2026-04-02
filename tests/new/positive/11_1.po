@@ -1,0 +1,12 @@
+class Main is
+  method double(a:Integer) : Integer is
+    return a.Mult(2)
+  end
+
+  this() is
+    var one : 1
+    var two : Integer(2)
+    var three : Integer(1).Plus(Integer(2))
+    var four : double(two)
+  end
+end

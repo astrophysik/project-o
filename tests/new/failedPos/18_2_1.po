@@ -1,0 +1,37 @@
+class Main is
+  method returnFromWhile() : Integer is
+    while true loop
+      return Integer(42)
+    end
+  end
+
+  method getNum() : Integer is
+    return Integer(30)
+  end
+
+  this() is
+    var i : Integer(0)
+
+    while i.Less(5) loop
+      i := i.Plus(Integer(1))
+    end
+
+    while i.Less(Integer(10)) loop
+      var j : Integer(0)
+      while j.Less(Integer(2)) loop
+        j := j.Plus(Integer(1))
+      end        
+      i := i.Plus(Integer(1))
+    end
+
+    while i.Less(getNum()) loop
+      if i.Greater(Integer(20)) then
+        i := i.Plus(Integer(1))
+      else
+        i := i.Plus(Integer(2)) 
+      end
+    end
+    
+    var int : returnFromWhile()
+  end
+end

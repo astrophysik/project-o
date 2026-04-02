@@ -1,0 +1,21 @@
+class test is
+  var first : Integer(0)
+  var second : Integer(0)
+
+  method getFirst() : Integer => first
+  method setBoth(a:Integer, b:Integer) is
+    first := a
+    second := b
+  end
+  this(a:Integer, b:Integer) is
+    var i : setBoth(a,b)
+  end 
+end
+
+class Main is
+  this() is
+    var obj : test(Integer(0), Integer(0))
+    obj.setBoth(Integer(1), Integer(4))
+    var int : obj.getFirst()
+  end
+end
