@@ -235,19 +235,17 @@ std::unique_ptr<ast::constructor_declaration> parser::parse_constructor_declarat
 
 std::unique_ptr<ast::block> parser::parse_block() {
     std::vector<std::unique_ptr<ast::entity>> items;
-
-    skip_newlines();
-    while (not check(lexer::token_type::tok_kw_end) && not check(lexer::token_type::tok_eof)) {
+    while (true) {
+        skip_newlines();
         if (match(lexer::token_type::tok_kw_var)) {
             // var
             items.push_back(parse_variable_declaration());
+        } else if (auto statement{parse_statement()}; statement != nullptr) {
+            items.push_back(std::move(statement));
         } else {
-            // statements + method call
-            items.push_back(parse_statement());
+            break;
         }
-        skip_newlines();
     }
-
     return std::make_unique<ast::block>(std::move(items));
 }
 
