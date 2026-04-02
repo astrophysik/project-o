@@ -163,6 +163,17 @@ struct lexeme_parser {
         char symbol{*symbol_opt};
 
         size_t start_col = column_num + 1;
+        bool is_negative{};
+        if (symbol == '-') {
+            is_negative = true;
+            take_next_symbol();
+            symbol_opt = peek_next_symbol();
+            if (!symbol_opt.has_value()) {
+                return token{.type = token_type::tok_eof, .span = {.line_num = line_num, .start_pos = column_num, .end_pos = column_num + 1}, .value = ""};
+            }
+            symbol = *symbol_opt;
+        }
+
         if (is_digit(symbol)) {
             size_t length = 1;
 
@@ -192,13 +203,15 @@ struct lexeme_parser {
             auto num = *num_opt;
 
             if (is_real) {
+                auto value{is_negative ? -1 * std::stod(std::string(num)) : std::stod(std::string(num))};
                 return token{.type = token_type::tok_real,
                              .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
-                             .value = std::stod(std::string(num))};
+                             .value = value};
             } else {
+                auto value{is_negative ? -1 * std::stoi(std::string(num)) : std::stoi(std::string(num))};
                 return token{.type = token_type::tok_int,
                              .span = {.line_num = line_num, .start_pos = start_col, .end_pos = column_num + 1},
-                             .value = std::stoi(std::string(num))};
+                             .value = value};
             }
         }
 
