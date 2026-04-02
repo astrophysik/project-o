@@ -211,7 +211,7 @@ std::unique_ptr<ast::method_declaration> parser::parse_method_declaration() {
         auto expr = parse_expression();
         method->body = std::move(expr);
     } else {
-        throw parse_error(std::format("Expected method body at line {}", peek().span.line_num));
+        // forward method declaration
     }
     return method;
 }
