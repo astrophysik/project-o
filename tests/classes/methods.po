@@ -3,8 +3,8 @@ class TestMethods is
   method Set(v: Integer) is
     value := v
   end
-  method Get : Integer => value
-  method Double : Integer => value.Mult(2)
+  method Get() : Integer => value
+  method Double() : Integer => value.Mult(2)
 end
 
 class Main is
@@ -16,7 +16,7 @@ class Main is
   tm.Set(5)
   Main.Assert( tm.Get().Equal(Integer(5)) )
   Main.Assert( tm.Double().Equal(Integer(10)) )
-	
+
   return
  end
 end

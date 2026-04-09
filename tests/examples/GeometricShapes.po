@@ -1,5 +1,5 @@
 class Shape is
-    method area : Real => 0.0
+    method area() : Real => 0.0
 end
 
 class Circle extends Shape is
@@ -8,7 +8,7 @@ class Circle extends Shape is
         radius := r
     end
 
-    method area : Real => radius.Mult(radius).Mult(3.14159)
+    method area() : Real => radius.Mult(radius).Mult(3.14159)
 end
 
 class Rectangle extends Shape is
@@ -18,13 +18,13 @@ class Rectangle extends Shape is
         width  := w
         height := h
     end
-    method area : Real => width.Mult(height)
+    method area() : Real => width.Mult(height)
 end
 
 class Main is
     this() is
-        var s1 : Shape := Circle(5.0)
-        var s2 : Shape := Rectangle(4.0, 6.0)
-        var total : Real := s1.area.Plus(s2.area)
+        var s1 : Circle(5.0)
+        var s2 : Rectangle(4.0, 6.0)
+        var total : s1.area.Plus(s2.area)
     end
 end

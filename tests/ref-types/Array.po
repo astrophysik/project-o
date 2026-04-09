@@ -2,7 +2,7 @@ class Main is
   method Assert(cond: Boolean) => IO.print(value)
 
   this() is
-    var a : Array[Integer](5)
+    var a : ArrayInteger(5)
 
     Main.Assert( a.Length.Equal(Integer(5)) )
 

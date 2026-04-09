@@ -1,11 +1,26 @@
 set(COMPILER_DIR ${CMAKE_CURRENT_LIST_DIR})
 
+set(COMPILER_ANALYSIS
+    ${COMPILER_DIR}/analysis/print/details/ast-printer.cpp
+)
+
 set(COMPILER_MAIN
     ${COMPILER_DIR}/compiler.cpp
 )
 
+set(COMPILER_AST
+        ${COMPILER_DIR}/ast/ast.cpp
+)
+
+set(COMPILER_PARSER
+    ${COMPILER_DIR}/parser/parser.cpp
+)
+
 set(COMPILER_SOURCES
     ${COMPILER_MAIN}
+    ${COMPILER_PARSER}
+    ${COMPILER_AST}
+    ${COMPILER_ANALYSIS}
 )
 
 add_executable(compiler ${COMPILER_SOURCES})

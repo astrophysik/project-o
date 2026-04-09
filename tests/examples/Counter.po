@@ -5,19 +5,19 @@ class Counter is
         count := count.Plus(step)
     end
 
-    method get : Integer => count
+    method get() : Integer => count
 
-    method reset is
+    method reset() is
         count := 0
     end
 end
 
 class Main is
     this() is
-        var c : Counter := Counter()
+        var c : Counter()
         c.increment(5)
         c.increment(3)
-        var val : Integer := c.get()
+        var val : c.get()
         c.reset()
     end
 end

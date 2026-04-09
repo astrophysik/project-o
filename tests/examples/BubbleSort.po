@@ -2,14 +2,14 @@ class BubbleSort is
     this() is
     end
 
-    method sort(arr: Array[Integer]) is
+    method sort(arr: ArrayInteger) is
         var n : arr.Length()
         var i : Integer(1)
 
         while(i.Less(n)) loop
             var j : Integer(1)
             var swapped : false
-            
+
             while(j.Less(n.Minus(i))) loop
                 if a.get(j).Greator(a.get(j.Plus(1))) then
                     var tmp : a.get(j)
@@ -33,7 +33,7 @@ end
 
 class Main is
     this() is
-        var arr: Array[Integer](5)
+        var arr: ArrayInteger(5)
         arr.set(0, 6)
         arr.set(1, 2)
         arr.set(2, 4)
