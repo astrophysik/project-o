@@ -1,0 +1,102 @@
+#pragma once
+
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include "compiler/analysis/semantic/type.h"
+
+namespace analysis::semantic {
+
+enum class symbol_kind {
+    class_symbol,
+    method_symbol,
+    variable_symbol,
+};
+
+struct symbol {
+    // todo add span
+    std::string name;
+    symbol_kind kind;
+
+    symbol(std::string n, symbol_kind k)
+        : name(std::move(n)),
+          kind(k) {}
+
+    virtual ~symbol() = default;
+};
+
+struct symbol_table {
+    symbol_table(symbol_table* p)
+        : parent(p){};
+
+    symbol_table(const symbol_table&) = delete;
+    symbol_table& operator=(const symbol_table&) = delete;
+    symbol_table(symbol_table&&) noexcept = default;
+    symbol_table& operator=(symbol_table&&) noexcept = default;
+
+    void add(std::unique_ptr<symbol> symbol) {
+        symbols[symbol->name] = std::move(symbol);
+    }
+
+    symbol* lookup(const std::string& name) const {
+        if (auto it = symbols.find(name); it != symbols.end()) {
+            return it->second.get();
+        }
+        if (parent != nullptr) {
+            return parent->lookup(name);
+        }
+        return nullptr;
+    }
+
+    template<typename T>
+    T* typed_lookup(const std::string& name) const {
+        return dynamic_cast<T*>(lookup(name));
+    }
+
+    auto begin() noexcept {
+        return symbols.begin();
+    }
+
+    auto end() noexcept {
+        return symbols.end();
+    }
+
+private:
+    std::unordered_map<std::string, std::unique_ptr<symbol>> symbols{};
+    symbol_table* parent;
+};
+
+struct variable_symbol : symbol {
+    semantic::type type;
+
+    variable_symbol(std::string name, semantic::type type)
+        : symbol(std::move(name), symbol_kind::variable_symbol),
+          type(std::move(type)) {}
+};
+
+struct method_symbol : symbol {
+    std::optional<semantic::type> return_type;
+    std::vector<semantic::type> parameter_types;
+    std::unique_ptr<symbol_table> method_scope;
+
+    method_symbol(std::string name, symbol_table* parent_scope, std::optional<semantic::type> ret_type, std::vector<semantic::type> params_type)
+        : symbol(std::move(name), symbol_kind::method_symbol),
+          method_scope(std::make_unique<symbol_table>(parent_scope)),
+          return_type(std::move(ret_type)),
+          parameter_types(std::move(params_type)) {}
+};
+
+struct class_symbol : symbol {
+    class_symbol* base_class = nullptr;
+    std::unique_ptr<symbol_table> class_scope;
+
+    class_symbol(std::string name, symbol_table* parent_scope, class_symbol* base_class)
+        : symbol(std::move(name), symbol_kind::class_symbol),
+          class_scope(std::make_unique<symbol_table>(parent_scope)),
+          base_class(base_class) {}
+};
+
+} // namespace analysis::semantic

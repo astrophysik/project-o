@@ -5,6 +5,7 @@
 #include "compiler/analysis/print/ast-print.h"
 #include "compiler/lexer/lexer.h"
 #include "compiler/parser/parser.h"
+#include "compiler/analysis/semantic/semantic-check.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -15,14 +16,12 @@ int main(int argc, char* argv[]) {
     std::ifstream s(argv[1]);
     std::string file_content((std::istreambuf_iterator<char>(s)), std::istreambuf_iterator<char>());
 
-    // lexer
-    auto tokens_res = lexer::tokenize_text(file_content);
-    std::println("{}", tokens_res);
-
-    // parser
-    auto parser = parser::parser(tokens_res);
-
-    // ast
-    auto ast = parser.parse();
-    analysis::print_program_ast(ast);
+    try {
+        auto tokens_res = lexer::tokenize_text(file_content);
+        auto parser = parser::parser(tokens_res);
+        auto ast = parser.parse();
+        analysis::semantic::check_program(ast);
+    } catch (std::exception& e) {
+        std::cerr << "Compilation error : \n" << e.what();
+    }
 }
