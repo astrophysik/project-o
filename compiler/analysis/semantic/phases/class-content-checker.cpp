@@ -13,16 +13,22 @@ void class_content_checker::visit(ast::program& node) {
 }
 
 void class_content_checker::visit(ast::class_declaration& node) {
-    auto* cls = program_symbol_table.typed_lookup<semantic::class_symbol>(node.name);
+    auto* cls = program_symbol_table.typed_lookup<class_symbol>(node.name);
     assert(cls != nullptr);
     current_scope = cls->class_scope.get();
-    for (const auto& field : node.fields) {
+    current_class_name_ = node.name;
+    for (const auto& field : node.fields)
         field->accept(*this);
-    }
 }
 
 void class_content_checker::visit(ast::variable_declaration& node) {
-    // type check init expr of field
+    auto result = inferrer_.infer(node.initializer.get(), *current_scope);
+    if (!result) {
+        error_message += std::format("Field '{}': {}\n", node.name, result.error());
+        return;
+    }
+    auto* sym = current_scope->typed_lookup<variable_symbol>(node.name);
+    if (sym) sym->type = *result;
 }
 
 void class_content_checker::visit(ast::block& node) {}

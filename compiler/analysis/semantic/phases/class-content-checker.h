@@ -3,6 +3,7 @@
 #include <expected>
 
 #include "compiler/analysis/semantic/symbol-table.h"
+#include "compiler/analysis/semantic/phases/type-inferrer.h"
 #include "compiler/ast/ast-visitor.h"
 #include "compiler/ast/ast.h"
 
@@ -13,7 +14,8 @@ namespace details {
 class class_content_checker : public ast::visitor {
 public:
     explicit class_content_checker(symbol_table& t)
-        : program_symbol_table(t) {}
+        : program_symbol_table(t),
+          inferrer_(t, current_class_name_) {}
 
     void visit(ast::program& node) override;
     void visit(ast::block& node) override;
@@ -43,8 +45,10 @@ public:
 
 private:
     std::string error_message{};
+    std::string current_class_name_{};
     symbol_table& program_symbol_table;
     symbol_table* current_scope = nullptr;
+    type_inferrer  inferrer_;
 };
 
 } // namespace details
