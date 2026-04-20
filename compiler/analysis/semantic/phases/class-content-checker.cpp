@@ -13,7 +13,7 @@ void class_content_checker::visit(ast::program& node) {
 }
 
 void class_content_checker::visit(ast::class_declaration& node) {
-    auto* cls = program_symbol_table.typed_lookup<semantic::class_symbol>(node.name);
+    auto* cls = program_symbol_table.typed_lookup<structures::class_symbol>(node.name);
     assert(cls != nullptr);
     current_scope = cls->class_scope.get();
     for (const auto& field : node.fields) {

@@ -6,7 +6,7 @@
 #include <utility>
 
 #include "compiler/ast/ast.h"
-#include "compiler/analysis/semantic/symbol-table.h"
+#include "compiler/compilation-structures/symbol-table.h"
 
 namespace analysis::semantic::phases::details {
 
@@ -21,15 +21,15 @@ void class_collector::visit(ast::class_declaration& node) {
         error_message += std::format("Class redefinition {}\n", node.name);
         return;
     }
-    class_symbol* base_class = nullptr;
+    structures::class_symbol* base_class = nullptr;
     if (node.base_class.has_value()) {
-        base_class = program_symbol_table->typed_lookup<semantic::class_symbol>(*node.base_class);
+        base_class = program_symbol_table->typed_lookup<structures::class_symbol>(*node.base_class);
         if (base_class == nullptr) {
             error_message += std::format("Class {} inheritance of undefined class {}\n", node.name, *node.base_class);
             return;
         }
     }
-    auto sym{std::make_unique<class_symbol>(node.name, program_symbol_table.get(), base_class)};
+    auto sym{std::make_unique<structures::class_symbol>(node.name, program_symbol_table.get(), base_class)};
     program_symbol_table->add(std::move(sym));
 }
 
