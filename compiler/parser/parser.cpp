@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "compiler/ast/ast.h"
+#include "compiler/compilation-structures/ast.h"
 #include "compiler/lexer/token.h"
 #include "parser.h"
 

@@ -11,8 +11,9 @@ set(COMPILER_MAIN
         ${COMPILER_DIR}/compiler.cpp
 )
 
-set(COMPILER_AST
-        ${COMPILER_DIR}/ast/ast.cpp
+set(COMPILER_COMPILATION_STRUCTURES
+        ${COMPILER_DIR}/compilation-structures/type-table.cpp
+        ${COMPILER_DIR}/compilation-structures/ast.cpp
 )
 
 set(COMPILER_PARSER
@@ -23,6 +24,7 @@ set(COMPILER_SOURCES
         ${COMPILER_MAIN}
         ${COMPILER_PARSER}
         ${COMPILER_AST}
+        ${COMPILER_COMPILATION_STRUCTURES}
         ${COMPILER_ANALYSIS}
 )
 

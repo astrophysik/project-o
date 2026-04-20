@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "compiler/ast/ast.h"
+#include "compiler/compilation-structures/ast.h"
 
 namespace {
 
@@ -63,7 +63,7 @@ void class_body_collector::visit(ast::variable_declaration& node) {
     }
     field_names.insert(node.name);
 
-    auto field = std::make_unique<structures::variable_symbol>(node.name, "Unknown");
+    auto field = std::make_unique<structures::variable_symbol>(node.name, program_type_table.getUnknown());
     current_class->class_scope->add(std::move(field));
 }
 
@@ -74,16 +74,17 @@ void class_body_collector::visit(ast::method_declaration& node) {
     }
     method_names.insert(node.name);
 
-    std::optional<structures::type> return_type = node.return_type;
-    std::vector<structures::type> param_types;
+    std::optional<const structures::type*> return_type =
+        node.return_type.transform([this](const std::string& type_name) { return program_type_table.resolveType(type_name); });
+    std::vector<const structures::type *> param_types;
     for (auto& param : node.parameters) {
-        param_types.push_back(param->type_name);
+        param_types.push_back(program_type_table.resolveType(param->type_name));
     }
 
     auto method = std::make_unique<structures::method_symbol>(node.name, current_class->class_scope.get(), return_type, std::move(param_types));
 
     for (auto& param : node.parameters) {
-        auto param_sym = std::make_unique<structures::variable_symbol>(param->name, param->type_name);
+        auto param_sym = std::make_unique<structures::variable_symbol>(param->name, program_type_table.resolveType(param->type_name));
         method->method_scope->add(std::move(param_sym));
     }
 
@@ -98,14 +99,14 @@ void class_body_collector::visit(ast::constructor_declaration& node) {
     }
     constructor_signatures.insert(signature);
 
-    std::vector<structures::type> param_types;
+    std::vector<const structures::type *> param_types;
     for (auto& param : node.parameters) {
-        param_types.push_back(param->type_name);
+        param_types.push_back(program_type_table.resolveType(param->type_name));
     }
 
-    auto ctor = std::make_unique<structures::method_symbol>(signature, current_class->class_scope.get(), current_class->name, std::move(param_types));
+    auto ctor = std::make_unique<structures::method_symbol>(signature, current_class->class_scope.get(), program_type_table.resolveType(current_class->name), std::move(param_types));
     for (auto& param : node.parameters) {
-        auto param_sym = std::make_unique<structures::variable_symbol>(param->name, param->type_name);
+        auto param_sym = std::make_unique<structures::variable_symbol>(param->name, program_type_table.resolveType(param->type_name));
         ctor->method_scope->add(std::move(param_sym));
     }
 

@@ -2,7 +2,7 @@
 
 #include <print>
 
-#include "compiler/ast/ast.h"
+#include "compiler/compilation-structures/ast.h"
 
 namespace analysis::details {
 void ast_printer::print_indent() {

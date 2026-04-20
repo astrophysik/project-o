@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "compiler/analysis/print/details/ast-printer.h"
-#include "compiler/ast/ast.h"
+#include "compiler/compilation-structures/ast.h"
 
 namespace analysis {
 

@@ -5,7 +5,7 @@
 #include <memory>
 #include <utility>
 
-#include "compiler/ast/ast.h"
+#include "compiler/compilation-structures/ast.h"
 #include "compiler/compilation-structures/symbol-table.h"
 
 namespace analysis::semantic::phases::details {
@@ -31,6 +31,7 @@ void class_collector::visit(ast::class_declaration& node) {
     }
     auto sym{std::make_unique<structures::class_symbol>(node.name, program_symbol_table.get(), base_class)};
     program_symbol_table->add(std::move(sym));
+    program_type_table->addClass(node.name, &node);
 }
 
 void class_collector::visit(ast::block& node) {}
