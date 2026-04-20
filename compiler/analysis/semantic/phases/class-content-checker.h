@@ -3,8 +3,8 @@
 #include <expected>
 
 #include "compiler/compilation-structures/symbol-table.h"
-#include "compiler/ast/ast-visitor.h"
-#include "compiler/ast/ast.h"
+#include "compiler/compilation-structures/ast-visitor.h"
+#include "compiler/compilation-structures/ast.h"
 
 namespace analysis::semantic::phases {
 

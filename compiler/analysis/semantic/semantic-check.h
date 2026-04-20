@@ -5,7 +5,7 @@
 #include "compiler/analysis/semantic/phases/class-body-collector.h"
 #include "compiler/analysis/semantic/phases/class-collector.h"
 #include "compiler/analysis/semantic/phases/class-content-checker.h"
-#include "compiler/ast/ast.h"
+#include "compiler/compilation-structures/ast.h"
 
 namespace analysis::semantic {
 
@@ -15,9 +15,9 @@ void check_program(const std::unique_ptr<ast::program>& program) {
         throw std::runtime_error{program_symbol_table_res.error()};
     }
 
-    auto program_symbol_table = std::move(*program_symbol_table_res);
+    auto [program_symbol_table, program_type_table] = std::move(*program_symbol_table_res);
 
-    if (auto res = phases::process_classes_content(program, *program_symbol_table); !res.has_value()) {
+    if (auto res = phases::process_classes_content(program, *program_symbol_table, *program_type_table); !res.has_value()) {
         throw std::runtime_error{res.error()};
     }
 

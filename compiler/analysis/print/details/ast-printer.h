@@ -1,8 +1,10 @@
 #pragma once
 
-#include "compiler/ast/ast-visitor.h"
 #include <iostream>
 #include <print>
+
+#include "compiler/compilation-structures/ast-visitor.h"
+#include "compiler/compilation-structures/ast.h"
 
 namespace analysis::details {
 

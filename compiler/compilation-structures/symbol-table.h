@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include "compiler/compilation-structures/type.h"
+#include "compiler/compilation-structures/type-table.h"
 
 namespace structures {
 
@@ -70,19 +70,19 @@ private:
 };
 
 struct variable_symbol : symbol {
-    structures::type type;
+    const structures::type* type;
 
-    variable_symbol(std::string name, structures::type type)
+    variable_symbol(std::string name, const structures::type* type)
         : symbol(std::move(name), symbol_kind::variable_symbol),
-          type(std::move(type)) {}
+          type(type) {}
 };
 
 struct method_symbol : symbol {
-    std::optional<structures::type> return_type;
-    std::vector<structures::type> parameter_types;
+    std::optional<const structures::type *> return_type;
+    std::vector<const structures::type *> parameter_types;
     std::unique_ptr<symbol_table> method_scope;
 
-    method_symbol(std::string name, symbol_table* parent_scope, std::optional<structures::type> ret_type, std::vector<structures::type> params_type)
+    method_symbol(std::string name, symbol_table* parent_scope, std::optional<const structures::type *> ret_type, std::vector<const structures::type *> params_type)
         : symbol(std::move(name), symbol_kind::method_symbol),
           method_scope(std::make_unique<symbol_table>(parent_scope)),
           return_type(std::move(ret_type)),
