@@ -6,9 +6,9 @@
 #include <utility>
 #include <vector>
 
-#include "compiler/analysis/semantic/type.h"
+#include "compiler/compilation-structures/type.h"
 
-namespace analysis::semantic {
+namespace structures {
 
 enum class symbol_kind {
     class_symbol,
@@ -70,19 +70,19 @@ private:
 };
 
 struct variable_symbol : symbol {
-    semantic::type type;
+    structures::type type;
 
-    variable_symbol(std::string name, semantic::type type)
+    variable_symbol(std::string name, structures::type type)
         : symbol(std::move(name), symbol_kind::variable_symbol),
           type(std::move(type)) {}
 };
 
 struct method_symbol : symbol {
-    std::optional<semantic::type> return_type;
-    std::vector<semantic::type> parameter_types;
+    std::optional<structures::type> return_type;
+    std::vector<structures::type> parameter_types;
     std::unique_ptr<symbol_table> method_scope;
 
-    method_symbol(std::string name, symbol_table* parent_scope, std::optional<semantic::type> ret_type, std::vector<semantic::type> params_type)
+    method_symbol(std::string name, symbol_table* parent_scope, std::optional<structures::type> ret_type, std::vector<structures::type> params_type)
         : symbol(std::move(name), symbol_kind::method_symbol),
           method_scope(std::make_unique<symbol_table>(parent_scope)),
           return_type(std::move(ret_type)),
@@ -99,4 +99,4 @@ struct class_symbol : symbol {
           base_class(base_class) {}
 };
 
-} // namespace analysis::semantic
+} // namespace structures

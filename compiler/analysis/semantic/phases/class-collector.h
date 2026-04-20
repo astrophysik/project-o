@@ -4,7 +4,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "compiler/analysis/semantic/symbol-table.h"
+#include "compiler/compilation-structures/symbol-table.h"
 #include "compiler/ast/ast-visitor.h"
 #include "compiler/ast/ast.h"
 
@@ -33,7 +33,7 @@ public:
     void visit(ast::call_expression& node) override;
     void visit(ast::grouping_expression& node) override;
 
-    std::expected<std::unique_ptr<analysis::semantic::symbol_table>, std::string> get_result() {
+    std::expected<std::unique_ptr<structures::symbol_table>, std::string> get_result() {
         if (!error_message.empty()) {
             return std::unexpected{error_message};
         }
@@ -42,12 +42,12 @@ public:
 
 private:
     std::string error_message{};
-    std::unique_ptr<symbol_table> program_symbol_table{std::make_unique<symbol_table>(nullptr)};
+    std::unique_ptr<structures::symbol_table> program_symbol_table{std::make_unique<structures::symbol_table>(nullptr)};
 };
 
 } // namespace details
 
-inline std::expected<std::unique_ptr<symbol_table>, std::string> collect_program_classes(const std::unique_ptr<ast::program>& program) {
+inline std::expected<std::unique_ptr<structures::symbol_table>, std::string> collect_program_classes(const std::unique_ptr<ast::program>& program) {
     details::class_collector class_collector;
     program->accept(class_collector);
 
