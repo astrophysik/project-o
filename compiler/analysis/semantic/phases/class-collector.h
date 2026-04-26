@@ -1,8 +1,9 @@
 #pragma once
 
-#include <expected>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 #include "compiler/compilation-structures/ast-visitor.h"
 #include "compiler/compilation-structures/ast.h"
@@ -33,9 +34,9 @@ public:
     void visit(ast::call_expression& node) override;
     void visit(ast::grouping_expression& node) override;
 
-    std::expected<std::pair<std::unique_ptr<structures::symbol_table>, std::unique_ptr<structures::type_table>>, std::string> get_result() {
+    std::pair<std::unique_ptr<structures::symbol_table>, std::unique_ptr<structures::type_table>> get_result() {
         if (!error_message.empty()) {
-            return std::unexpected{error_message};
+            throw std::runtime_error{error_message};
         }
         return std::pair<std::unique_ptr<structures::symbol_table>, std::unique_ptr<structures::type_table>>{std::move(program_symbol_table),
                                                                                                              std::move(program_type_table)};
@@ -49,7 +50,7 @@ private:
 
 } // namespace details
 
-inline std::expected<std::pair<std::unique_ptr<structures::symbol_table>, std::unique_ptr<structures::type_table>>, std::string>
+inline std::pair<std::unique_ptr<structures::symbol_table>, std::unique_ptr<structures::type_table>>
 collect_program_classes(const std::unique_ptr<ast::program>& program) {
     details::class_collector class_collector;
     program->accept(class_collector);
