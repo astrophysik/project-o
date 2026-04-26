@@ -55,11 +55,11 @@ public:
     std::string toString() const {
         switch (kind) {
             case type_kind::Unit:
-                return "Void";
+                return "Unit";
             case type_kind::Int:
-                return "Int";
+                return "Integer";
             case type_kind::Bool:
-                return "Bool";
+                return "Boolean";
             case type_kind::Real:
                 return "Real";
             case type_kind::Error:
@@ -91,11 +91,6 @@ public:
     type_table(type_table&&) = delete;
     type_table& operator=(type_table&&) = delete;
 
-    const type* getUnit() const { return unit_type_; }
-    const type* getInt() const { return int_type_; }
-    const type* getBool() const { return bool_type_; }
-    const type* getReal() const { return real_type_; }
-    const type* getError() const { return error_type_; }
     const type* getUnknown() const {return unknown_type_;}
     
     const class_type* getClass(const std::string& name) const;
@@ -108,11 +103,7 @@ public:
     static bool isPrimitiveTypeName(const std::string& name);
 
 private:
-    const type* unit_type_;
-    const type* int_type_;
-    const type* bool_type_;
-    const type* real_type_;
-    const type* error_type_;
+
     const type* unknown_type_;
 
     std::vector<std::unique_ptr<type>> owned_types_;

@@ -115,8 +115,7 @@ void class_body_collector::visit(ast::constructor_declaration& node) {
         ctor->method_scope->add(std::move(param_sym));
     }
 
-    current_class->constructors.push_back(ctor.get());
-    current_class->class_scope->add(std::move(ctor));
+    current_class->constructors.push_back(std::move(ctor));
 }
 
 void class_body_collector::visit(ast::parameter_declaration& node) {}
