@@ -12,8 +12,8 @@ namespace details {
 
 class class_content_checker : public ast::visitor {
 public:
-    explicit class_content_checker(structures::symbol_table& t)
-        : program_symbol_table(t) {}
+    explicit class_content_checker(structures::symbol_table& symbol_table, structures::type_table& type_table)
+        : program_symbol_table(symbol_table), program_type_table(type_table) {}
 
     void visit(ast::program& node) override;
     void visit(ast::block& node) override;
@@ -44,13 +44,14 @@ public:
 private:
     std::string error_message{};
     structures::symbol_table& program_symbol_table;
-    structures::symbol_table* current_scope = nullptr;
+    structures::type_table& program_type_table;
+    structures::class_symbol* current_class_symbol = nullptr;
 };
 
 } // namespace details
 
-inline std::expected<void, std::string> check_classes_content(const std::unique_ptr<ast::program>& program, structures::symbol_table& program_table) {
-    details::class_content_checker class_content_checker(program_table);
+inline std::expected<void, std::string> check_classes_content(const std::unique_ptr<ast::program>& program, structures::symbol_table& symbol_table, structures::type_table& type_table) {
+    details::class_content_checker class_content_checker(symbol_table, type_table);
     program->accept(class_content_checker);
     return class_content_checker.get_result();
 }

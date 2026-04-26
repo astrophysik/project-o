@@ -92,6 +92,9 @@ struct method_symbol : symbol {
 struct class_symbol : symbol {
     class_symbol* base_class = nullptr;
     std::unique_ptr<symbol_table> class_scope;
+    std::vector<method_symbol *> methods;
+    std::vector<variable_symbol *> fields;
+    std::vector<method_symbol *> constructors;
 
     class_symbol(std::string name, symbol_table* parent_scope, class_symbol* base_class)
         : symbol(std::move(name), symbol_kind::class_symbol),

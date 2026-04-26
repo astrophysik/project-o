@@ -3,8 +3,10 @@
 #include "type-checker.h"
 
 #include <cassert>
+#include <format>
 
 namespace analysis::semantic::phases::details {
+
 
 void class_content_checker::visit(ast::program& node) {
     for (auto& cls : node.classes) {
@@ -15,14 +17,21 @@ void class_content_checker::visit(ast::program& node) {
 void class_content_checker::visit(ast::class_declaration& node) {
     auto* cls = program_symbol_table.typed_lookup<structures::class_symbol>(node.name);
     assert(cls != nullptr);
-    current_scope = cls->class_scope.get();
+    current_class_symbol = cls;
     for (const auto& field : node.fields) {
         field->accept(*this);
     }
 }
 
 void class_content_checker::visit(ast::variable_declaration& node) {
-    // type check init expr of field
+    auto type_res = structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, current_class_symbol});
+    if (!type_res.has_value()) {
+        error_message += type_res.error();
+        return;
+    }
+
+    auto * symbol = current_class_symbol->class_scope->typed_lookup<structures::variable_symbol>(node.name);
+    symbol->type = *type_res;
 }
 
 void class_content_checker::visit(ast::block& node) {}

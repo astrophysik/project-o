@@ -4,12 +4,13 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <expected>
 
-namespace ast {
-class class_declaration;
-}
+#include "compiler/compilation-structures/ast-forward-declarations.h"
 
 namespace structures {
+
+class class_symbol;
 
 class type;
 class type_table;
@@ -26,6 +27,11 @@ enum class type_kind {
 
 class type {
 public:
+    struct infer_context {
+        structures::type_table * type_table;
+        structures::class_symbol * class_symbol;
+    };
+
     const type_kind kind;
 
     explicit type(type_kind k) : kind(k) {}
@@ -35,8 +41,11 @@ public:
 
     static bool isSubtype(const type* sub, const type* super);
     static bool typesEqual(const type* t1, const type* t2);
+    static std::expected<const type *, std::string> inferExpressionType(const ast::expression * expression, infer_context context);
+
     
     bool isError() const { return kind == type_kind::Error; }
+
 };
 
 class primitive_type : public type {
