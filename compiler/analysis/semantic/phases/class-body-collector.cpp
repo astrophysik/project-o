@@ -41,16 +41,20 @@ void class_body_collector::visit(ast::class_declaration& node) {
     method_names.clear();
     constructor_signatures.clear();
 
-    for (auto& field : node.fields) {
-        field->accept(*this);
-    }
+    try {
+        for (auto& field : node.fields) {
+            field->accept(*this);
+        }
 
-    for (auto& method : node.methods) {
-        method->accept(*this);
-    }
+        for (auto& method : node.methods) {
+            method->accept(*this);
+        }
 
-    for (auto& ctor : node.constructors) {
-        ctor->accept(*this);
+        for (auto& ctor : node.constructors) {
+            ctor->accept(*this);
+        }
+    } catch (std::exception & exception) {
+        error_message += exception.what();
     }
 
     current_class = nullptr;

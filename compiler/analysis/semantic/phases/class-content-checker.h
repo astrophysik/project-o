@@ -1,6 +1,7 @@
 #pragma once
 
-#include <expected>
+#include <stdexcept>
+#include <string>
 
 #include "compiler/compilation-structures/symbol-table.h"
 #include "compiler/compilation-structures/ast-visitor.h"
@@ -34,11 +35,10 @@ public:
     void visit(ast::call_expression& node) override;
     void visit(ast::grouping_expression& node) override;
 
-    std::expected<void, std::string> get_result() {
+    void get_result() {
         if (!error_message.empty()) {
-            return std::unexpected{error_message};
+            throw std::runtime_error{error_message};
         }
-        return {};
     }
 
 private:
@@ -50,10 +50,10 @@ private:
 
 } // namespace details
 
-inline std::expected<void, std::string> check_classes_content(const std::unique_ptr<ast::program>& program, structures::symbol_table& symbol_table, structures::type_table& type_table) {
+inline void check_classes_content(const std::unique_ptr<ast::program>& program, structures::symbol_table& symbol_table, structures::type_table& type_table) {
     details::class_content_checker class_content_checker(symbol_table, type_table);
     program->accept(class_content_checker);
-    return class_content_checker.get_result();
+    class_content_checker.get_result();
 }
 
 } // namespace analysis::semantic::phases

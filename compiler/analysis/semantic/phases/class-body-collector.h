@@ -1,6 +1,6 @@
 #pragma once
 
-#include <expected>
+#include <stdexcept>
 #include <string>
 #include <unordered_set>
 
@@ -37,11 +37,10 @@ public:
     void visit(ast::call_expression& node) override;
     void visit(ast::grouping_expression& node) override;
 
-    std::expected<void, std::string> get_result() {
+    void get_result() {
         if (!error_message.empty()) {
-            return std::unexpected{error_message};
+            throw std::runtime_error{error_message};
         }
-        return {};
     }
 
 private:
@@ -57,12 +56,12 @@ private:
 
 } // namespace details
 
-inline std::expected<void, std::string> process_classes_content(const std::unique_ptr<ast::program>& program,
+inline void process_classes_content(const std::unique_ptr<ast::program>& program,
                                                                 structures::symbol_table& program_symbol_table,
                                                                 structures::type_table& program_type_table) {
     details::class_body_collector body_collector(program_symbol_table, program_type_table);
     program->accept(body_collector);
-    return body_collector.get_result();
+    body_collector.get_result();
 }
 
 } // namespace analysis::semantic::phases

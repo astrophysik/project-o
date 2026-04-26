@@ -24,14 +24,13 @@ void class_content_checker::visit(ast::class_declaration& node) {
 }
 
 void class_content_checker::visit(ast::variable_declaration& node) {
-    auto type_res = structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, current_class_symbol});
-    if (!type_res.has_value()) {
-        error_message += type_res.error();
-        return;
+    try {
+        auto type_res = structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, current_class_symbol});
+        auto * symbol = current_class_symbol->class_scope->typed_lookup<structures::variable_symbol>(node.name);
+        symbol->type = type_res;
+    } catch (const std::runtime_error& e) {
+        error_message += e.what();
     }
-
-    auto * symbol = current_class_symbol->class_scope->typed_lookup<structures::variable_symbol>(node.name);
-    symbol->type = *type_res;
 }
 
 void class_content_checker::visit(ast::block& node) {}
