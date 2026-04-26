@@ -21,7 +21,7 @@ void check_program(const std::unique_ptr<ast::program>& program) {
         throw std::runtime_error{res.error()};
     }
 
-    if (auto res = phases::check_classes_content(program, *program_symbol_table); !res.has_value()) {
+    if (auto res = phases::check_classes_content(program, *program_symbol_table, *program_type_table); !res.has_value()) {
         throw std::runtime_error{res.error()};
     }
 }

@@ -64,6 +64,7 @@ void class_body_collector::visit(ast::variable_declaration& node) {
     field_names.insert(node.name);
 
     auto field = std::make_unique<structures::variable_symbol>(node.name, program_type_table.getUnknown());
+    current_class->fields.push_back(field.get());
     current_class->class_scope->add(std::move(field));
 }
 
@@ -87,7 +88,7 @@ void class_body_collector::visit(ast::method_declaration& node) {
         auto param_sym = std::make_unique<structures::variable_symbol>(param->name, program_type_table.resolveType(param->type_name));
         method->method_scope->add(std::move(param_sym));
     }
-
+    current_class->methods.push_back(method.get());
     current_class->class_scope->add(std::move(method));
 }
 
@@ -110,6 +111,7 @@ void class_body_collector::visit(ast::constructor_declaration& node) {
         ctor->method_scope->add(std::move(param_sym));
     }
 
+    current_class->constructors.push_back(ctor.get());
     current_class->class_scope->add(std::move(ctor));
 }
 
