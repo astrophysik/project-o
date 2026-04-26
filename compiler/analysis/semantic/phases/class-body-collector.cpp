@@ -9,8 +9,8 @@
 
 namespace {
 
-std::string make_constructor_signature(const std::vector<std::unique_ptr<ast::parameter_declaration>>& params) {
-    std::string sig = "constructor(";
+std::string make_constructor_signature(const std::vector<std::unique_ptr<ast::parameter_declaration>>& params, const std::string & name) {
+    std::string sig = name + "(";
     for (size_t i = 0; i < params.size(); ++i) {
         if (i > 0) {
             sig += ",";
@@ -97,7 +97,7 @@ void class_body_collector::visit(ast::method_declaration& node) {
 }
 
 void class_body_collector::visit(ast::constructor_declaration& node) {
-    std::string signature = make_constructor_signature(node.parameters);
+    std::string signature = make_constructor_signature(node.parameters, current_class->name);
     if (constructor_signatures.contains(signature)) {
         error_message += std::format("Duplicate constructor with signature '{}' in class '{}'\n", signature, current_class->name);
         return;
