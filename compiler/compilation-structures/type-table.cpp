@@ -8,6 +8,31 @@
 #include "compiler/compilation-structures/symbol-table.h"
 
 namespace {
+
+std::string format_single_type(const structures::type* t) {
+    if (auto* cls = dynamic_cast<const structures::class_type*>(t)) {
+        return cls->name;
+    }
+    switch (t->kind) {
+        case structures::type_kind::Int: return "Integer";
+        case structures::type_kind::Bool: return "Boolean";
+        case structures::type_kind::Real: return "Real";
+        case structures::type_kind::Unit: return "Unit";
+        case structures::type_kind::Error: return "<error>";
+        default: return "<unknown>";
+    }
+}
+
+std::string format_argument_types(const std::vector<const structures::type*>& types) {
+    std::string result = "(";
+    for (size_t i = 0; i < types.size(); ++i) {
+        if (i > 0) result += ", ";
+        result += format_single_type(types[i]);
+    }
+    result += ")";
+    return result;
+}
+
 structures::method_symbol* find_method_in_hierarchy(structures::class_symbol* class_symbol, const std::string& name) {
     auto* current = class_symbol;
     while (current != nullptr) {
@@ -29,7 +54,177 @@ structures::variable_symbol* find_field_in_hierarchy(structures::class_symbol* c
     }
     return nullptr;
 }
+
+const structures::type* infer_expression(const ast::expression* expression, structures::type::infer_context context);
+
+void resolve_constructor_call(
+    structures::class_symbol* target_class,
+    const std::vector<const structures::type*>& argument_types)
+{
+    if (target_class->constructors.empty()) {
+        throw std::runtime_error{std::format("Class '{}' has no constructors defined\n", target_class->name)};
+    }
+
+    structures::method_symbol* matching_constructor = nullptr;
+    for (const auto& ctor : target_class->constructors) {
+        if (argument_types.size() != ctor->parameter_types.size()) {
+            continue;
+        }
+        bool types_match = true;
+        for (size_t i = 0; i < argument_types.size(); ++i) {
+            if (!structures::type::isSubtype(argument_types[i], ctor->parameter_types[i])) {
+                types_match = false;
+                break;
+            }
+        }
+        if (types_match) {
+            if (matching_constructor != nullptr) {
+                throw std::runtime_error{std::format(
+                    "Ambiguous constructor call for class '{}': multiple overloads match the argument types\n",
+                    target_class->name)};
+            }
+            matching_constructor = ctor.get();
+        }
+    }
+
+    if (matching_constructor == nullptr) {
+        std::string error_msg = std::format("No matching constructor for '{}'\n", target_class->name);
+        error_msg += std::format("  Argument types: {}\n", format_argument_types(argument_types));
+        error_msg += "  Available constructors:\n";
+        for (const auto& ctor : target_class->constructors) {
+            error_msg += std::format("    {}{}\n", target_class->name, format_argument_types(ctor->parameter_types));
+        }
+        throw std::runtime_error{error_msg};
+    }
 }
+
+void validate_method_call(
+    structures::method_symbol* method,
+    const std::vector<const structures::type*>& argument_types)
+{
+    if (argument_types.size() != method->parameter_types.size()) {
+        throw std::runtime_error{std::format(
+            "Method '{}': expected {} argument(s), got {}\n",
+            method->name,
+            method->parameter_types.size(),
+            argument_types.size())};
+    }
+
+    for (size_t i = 0; i < argument_types.size(); ++i) {
+        if (!structures::type::isSubtype(argument_types[i], method->parameter_types[i])) {
+            throw std::runtime_error{std::format(
+                "Method '{}': argument {} type mismatch - expected '{}', found '{}'\n",
+                method->name,
+                i + 1,
+                format_single_type(method->parameter_types[i]),
+                format_single_type(argument_types[i]))};
+        }
+    }
+}
+
+const structures::type* infer_call_expression(
+    const ast::call_expression* call_expr,
+    structures::type::infer_context context)
+{
+    std::vector<const structures::type*> argument_types;
+    for (const auto& arg : call_expr->arguments) {
+        argument_types.push_back(infer_expression(arg.get(), context));
+    }
+
+    if (auto* ident_expr = dynamic_cast<ast::identifier_expression*>(call_expr->callee.get())) {
+        if (auto* target_class = context.class_symbol->class_scope->typed_lookup<structures::class_symbol>(ident_expr->name)) {
+            resolve_constructor_call(target_class, argument_types);
+            return context.type_table->resolveType(target_class->name);
+        }
+        throw std::runtime_error{std::format("undefined constructor or function: {}\n", ident_expr->name)};
+    }
+
+    if (auto* member_expr = dynamic_cast<ast::member_expression*>(call_expr->callee.get())) {
+        auto object_type = infer_expression(member_expr->object.get(), context);
+
+        const auto* class_type = dynamic_cast<const structures::class_type*>(object_type);
+        if (class_type == nullptr) {
+            throw std::runtime_error{"cannot call method on non-class type\n"};
+        }
+
+        auto* object_class = context.class_symbol->class_scope->typed_lookup<structures::class_symbol>(class_type->name);
+        assert(object_class != nullptr);
+
+        if (object_class->name == member_expr->member) {
+            resolve_constructor_call(object_class, argument_types);
+            return class_type;
+        }
+
+        auto* method = find_method_in_hierarchy(object_class, member_expr->member);
+        if (method == nullptr) {
+            throw std::runtime_error{std::format("method '{}' not found in class '{}'\n", member_expr->member, class_type->name)};
+        }
+
+        validate_method_call(method, argument_types);
+
+        if (method->return_type.has_value()) {
+            return method->return_type.value();
+        }
+        return context.type_table->resolveType("Unit");
+    }
+
+    throw std::runtime_error{"unsupported call expression type\n"};
+}
+
+const structures::type* infer_expression(const ast::expression* expression, structures::type::infer_context context) {
+    if (auto* literal = dynamic_cast<const ast::literal_expression*>(expression)) {
+        switch (literal->type) {
+        case ast::literal_expression::type::integer:
+            return context.type_table->resolveType("Integer");
+        case ast::literal_expression::type::real:
+            return context.type_table->resolveType("Real");
+        case ast::literal_expression::type::boolean:
+            return context.type_table->resolveType("Boolean");
+        default:
+            throw std::runtime_error{"unknown literal type\n"};
+        }
+    }
+
+    if (dynamic_cast<const ast::this_expression*>(expression)) {
+        return context.type_table->resolveType(context.class_symbol->name);
+    }
+
+    if (auto* ident = dynamic_cast<const ast::identifier_expression*>(expression)) {
+        if (auto* var = context.class_symbol->class_scope->typed_lookup<structures::variable_symbol>(ident->name)) {
+            return var->type;
+        }
+        if (auto* cls = context.class_symbol->class_scope->typed_lookup<structures::class_symbol>(ident->name)) {
+            return context.type_table->resolveType(cls->name);
+        }
+        throw std::runtime_error{std::format("cannot use non variable symbol for field initialization {}\n", ident->name)};
+    }
+
+    if (auto* member = dynamic_cast<const ast::member_expression*>(expression)) {
+        auto object_type = infer_expression(member->object.get(), context);
+        if (const auto* cls_type = dynamic_cast<const structures::class_type*>(object_type)) {
+            auto* cls = context.class_symbol->class_scope->typed_lookup<structures::class_symbol>(cls_type->name);
+            assert(cls != nullptr);
+            auto* field = find_field_in_hierarchy(cls, member->member);
+            if (field == nullptr) {
+                throw std::runtime_error{std::format("cannot find field {} in class {}\n", member->member, cls_type->name)};
+            }
+            return field->type;
+        }
+        throw std::runtime_error{"accessing to fields on internal types unsupported\n"};
+    }
+
+    if (auto* call = dynamic_cast<const ast::call_expression*>(expression)) {
+        return infer_call_expression(call, context);
+    }
+
+    if (auto* group = dynamic_cast<const ast::grouping_expression*>(expression)) {
+        return infer_expression(group->inner.get(), context);
+    }
+
+    throw std::runtime_error{"unsupported expression kind for type infer"};
+}
+
+} // namespace
 
 namespace structures {
 
@@ -60,96 +255,10 @@ bool type::typesEqual(const type* t1, const type* t2) {
 }
 
 const type* type::inferExpressionType(const ast::expression* expression, type::infer_context context) {
-    if (auto* literal = dynamic_cast<const ast::literal_expression*>(expression)) {
-        switch (literal->type) {
-        case ast::literal_expression::type::integer:
-            return context.type_table->resolveType("Integer");
-        case ast::literal_expression::type::real:
-            return context.type_table->resolveType("Real");
-        case ast::literal_expression::type::boolean:
-            return context.type_table->resolveType("Bool");
-        default:
-            throw std::runtime_error{"unknown literal type\n"};
-        }
-    } else if (const auto* this_expr = dynamic_cast<const ast::this_expression*>(expression)) {
-        return context.type_table->resolveType(context.class_symbol->name);
-    } else if (const auto* ident_expr = dynamic_cast<const ast::identifier_expression*>(expression)) {
-        if (auto* variable_symbol = context.class_symbol->class_scope->typed_lookup<structures::variable_symbol>(ident_expr->name)) {
-            return variable_symbol->type;
-        } else if (auto* class_symbol = context.class_symbol->class_scope->typed_lookup<structures::class_symbol>(ident_expr->name)) {
-            return context.type_table->resolveType(class_symbol->name);
-        } else {
-            throw std::runtime_error{std::format("cannot use non variable symbol for field initialization {}\n", ident_expr->name)};
-        }
-    } else if (auto* member_expr = dynamic_cast<const ast::member_expression*>(expression)) {
-        auto object_type = inferExpressionType(member_expr->object.get(), context);
-        if (const auto* class_type = dynamic_cast<const structures::class_type*>(object_type)) {
-            auto* class_symbol = context.class_symbol->class_scope->typed_lookup<structures::class_symbol>(class_type->name);
-            assert(class_symbol != nullptr);
-            auto* field_symbol = find_field_in_hierarchy(class_symbol, member_expr->member);
-            if (field_symbol == nullptr) {
-                throw std::runtime_error{std::format("cannot find field {} in class {}\n", member_expr->member, class_type->name)};
-            }
-            return field_symbol->type;
-        } else {
-            throw std::runtime_error{"accessing to fields on internal types unsupported\n"};
-        }
-    } else if (auto* call_expr = dynamic_cast<const ast::call_expression*>(expression)) {
-        if (auto* ident_expr = dynamic_cast<ast::identifier_expression*>(call_expr->callee.get())) {
-            if (auto* class_symbol = context.class_symbol->class_scope->typed_lookup<structures::class_symbol>(ident_expr->name)) {
-                return context.type_table->resolveType(class_symbol->name);
-            }
-            throw std::runtime_error{std::format("undefined constructor or function: {}\n", ident_expr->name)};
-        } else if (auto* member_expr = dynamic_cast<ast::member_expression*>(call_expr->callee.get())) {
-            auto object_type = inferExpressionType(member_expr->object.get(), context);
-
-            const auto* class_type = dynamic_cast<const structures::class_type*>(object_type);
-            if (class_type == nullptr) {
-                throw std::runtime_error{"cannot call method on non-class type\n"};
-            }
-
-            auto* class_symbol = context.class_symbol->class_scope->typed_lookup<structures::class_symbol>(class_type->name);
-            assert(class_symbol != nullptr);
-
-            if (class_symbol->name == member_expr->member) {
-                return class_type;
-            }
-
-            auto* method_symbol = find_method_in_hierarchy(class_symbol, member_expr->member);
-            if (method_symbol == nullptr) {
-                throw std::runtime_error{std::format("method {} not found in class {}\n", member_expr->member, class_type->name)};
-            }
-
-            if (method_symbol->return_type.has_value()) {
-                return method_symbol->return_type.value();
-            } else {
-                return context.type_table->resolveType("Unit");
-            }
-        } else {
-            throw std::runtime_error{"unsupported call expression type\n"};
-        }
-    } else if (auto* group_expr = dynamic_cast<const ast::grouping_expression*>(expression)) {
-        return inferExpressionType(group_expr->inner.get(), context);
-    }
-    throw std::runtime_error{"unsupported expression kind for type infer"};
+    return infer_expression(expression, context);
 }
 
 type_table::type_table() {
-    owned_types_.push_back(std::make_unique<primitive_type>(type_kind::Unit));
-    unit_type_ = owned_types_.back().get();
-
-    owned_types_.push_back(std::make_unique<primitive_type>(type_kind::Int));
-    int_type_ = owned_types_.back().get();
-
-    owned_types_.push_back(std::make_unique<primitive_type>(type_kind::Bool));
-    bool_type_ = owned_types_.back().get();
-
-    owned_types_.push_back(std::make_unique<primitive_type>(type_kind::Real));
-    real_type_ = owned_types_.back().get();
-
-    owned_types_.push_back(std::make_unique<primitive_type>(type_kind::Error));
-    error_type_ = owned_types_.back().get();
-
     owned_types_.push_back(std::make_unique<primitive_type>(type_kind::Unknown));
     unknown_type_ = owned_types_.back().get();
 }
@@ -175,19 +284,6 @@ const class_type* type_table::addClass(const std::string& name, ast::class_decla
 }
 
 const type* type_table::resolveType(const std::string& name) const {
-    if (name == "Integer") {
-        return int_type_;
-    }
-    if (name == "Bool") {
-        return bool_type_;
-    }
-    if (name == "Unit") {
-        return unit_type_;
-    }
-    if (name == "Real") {
-        return real_type_;
-    }
-
     auto it = class_types_.find(name);
     if (it != class_types_.end()) {
         return it->second;
@@ -197,7 +293,7 @@ const type* type_table::resolveType(const std::string& name) const {
 }
 
 bool type_table::isPrimitiveTypeName(const std::string& name) {
-    return name == "Integer" || name == "Bool" || name == "Void" || name == "Real";
+    return name == "Integer" || name == "Boolean" || name == "Real" || name == "Unit";
 }
 
 } // namespace structures
