@@ -1,0 +1,13 @@
+class Main is
+  method test(a:Integer) is
+    var temp : a
+  end
+
+  method test(a:Real) is
+    var temp : a
+  end
+
+  this() is
+    var resFail : test(boolean(true))
+  end
+end

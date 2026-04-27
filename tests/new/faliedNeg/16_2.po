@@ -1,0 +1,13 @@
+class Main is
+  method test() : Integer is
+    return Integer(42)
+  end
+
+  method test() : Integer is
+  
+  end
+
+  this() is
+    var res : test()
+  end
+end

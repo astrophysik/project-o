@@ -1,0 +1,9 @@
+class testVarWrite is
+  var value : Integer(42)
+end
+class Main is
+  this() is
+    var obj : testVarWrite
+    obj.value := Integer(1)
+  end
+end

@@ -1,0 +1,6 @@
+class Main is
+  this() is
+    var x : true
+    var x : false
+  end
+end

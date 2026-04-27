@@ -1,0 +1,24 @@
+class Main is
+  method retPrimary() : Integer is
+    return 7
+  end
+
+  method retConstr() : Integer is
+    return Integer(42)
+  end
+
+  method retFunc() : Integer is
+    return retPrimary()
+  end
+
+  method retExpr() : Integer is
+    return Integer(42).Plus(Integer(1))
+  end
+
+  this() is   
+    var intPrimary : retPrimary()
+    var intConstr : retConstr()
+    var intFunc : retFunc()
+    var intExpr : retExpr()
+  end
+end

@@ -1,0 +1,14 @@
+class Main is
+  method test(a:Integer) is
+    var temp : a
+  end
+
+  method test() is
+    var temp : a
+  end
+
+  this() is
+    var resInt : test(Integer(42))
+    var resReal : test()
+  end
+end

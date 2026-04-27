@@ -1,0 +1,9 @@
+class Main is
+  method test(a:Integer) : Integer is
+    return a
+  end
+
+  this() is
+    var res : test(Integer(42))
+  end
+end

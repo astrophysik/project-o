@@ -1,0 +1,9 @@
+class Main is
+  this() is
+    var first : Integer
+  end
+
+  var second : Integer
+
+  method fakeMethod() : Boolean => Boolean(true)
+end

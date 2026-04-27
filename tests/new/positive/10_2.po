@@ -1,0 +1,15 @@
+class Base is
+  var value : Integer(0)
+end
+
+class Derived is
+  this() is
+    value := Integer(42)
+  end
+end
+
+class Main is
+  this() is
+    var obj : Derived
+  end
+end

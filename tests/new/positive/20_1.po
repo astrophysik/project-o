@@ -1,0 +1,13 @@
+class Main is
+  var first : Integer(1)
+  var second : Integer(2)
+
+  method getFirst() : Integer => first
+  method getSecond() : Integer => second
+
+  this() is
+    var obj : test(Integer(0), Integer(0))
+    obj.setBoth(Integer(1), Integer(4))
+    var int : getFirst().Plus(getSecond())
+  end
+end
