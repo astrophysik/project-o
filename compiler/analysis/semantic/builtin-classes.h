@@ -56,6 +56,11 @@ inline void add_builtin_classes(structures::symbol_table& sym_table, structures:
     auto* boolean_ptr = boolean_sym.get();
     sym_table.add(std::move(boolean_sym));
 
+    auto unit_sym = std::make_unique<structures::class_symbol>("Unit", &sym_table, anyvalue_ptr);
+    type_table.addClass("Unit", nullptr);
+    auto* unit_ptr = unit_sym.get();
+    sym_table.add(std::move(unit_sym));
+
     add_constructor(integer_ptr, {type_table.resolveType("Integer")}, type_table);
     add_constructor(integer_ptr, {type_table.resolveType("Real")}, type_table);
 
