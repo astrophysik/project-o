@@ -1,15 +1,21 @@
 #pragma once
 
-#include <iostream>
-#include <print>
+#include <stdexcept>
+#include <string>
 
+#include "compiler/compilation-structures/symbol-table.h"
 #include "compiler/compilation-structures/ast-visitor.h"
 #include "compiler/compilation-structures/ast.h"
 
-namespace analysis::details {
+namespace analysis::semantic::phases {
 
-class ast_printer : public ast::visitor {
+namespace details {
+
+class class_content_checker : public ast::visitor {
 public:
+    explicit class_content_checker(structures::symbol_table& symbol_table, structures::type_table& type_table)
+        : program_symbol_table(symbol_table), program_type_table(type_table) {}
+
     void visit(ast::program& node) override;
     void visit(ast::block& node) override;
     void visit(ast::class_declaration& node) override;
@@ -29,9 +35,25 @@ public:
     void visit(ast::call_expression& node) override;
     void visit(ast::grouping_expression& node) override;
 
-private:
-    int indent = 0;
+    void get_result() {
+        if (!error_message.empty()) {
+            throw std::runtime_error{error_message};
+        }
+    }
 
-    void print_indent();
+private:
+    std::string error_message{};
+    structures::symbol_table& program_symbol_table;
+    structures::type_table& program_type_table;
+    structures::class_symbol* current_class_symbol = nullptr;
 };
-} // namespace analysis::details
+
+} // namespace details
+
+inline void check_classes_content(const std::unique_ptr<ast::program>& program, structures::symbol_table& symbol_table, structures::type_table& type_table) {
+    details::class_content_checker class_content_checker(symbol_table, type_table);
+    program->accept(class_content_checker);
+    class_content_checker.get_result();
+}
+
+} // namespace analysis::semantic::phases

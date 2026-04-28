@@ -1,11 +1,11 @@
-#include "compiler/ast/ast.h"
+#include "compiler/compilation-structures/ast.h"
 
 #include <string>
 #include <vector>
 #include <utility>
 #include <memory>
 
-#include "compiler/ast/ast-visitor.h"
+#include "compiler/compilation-structures/ast-visitor.h"
 
 namespace ast {
 
