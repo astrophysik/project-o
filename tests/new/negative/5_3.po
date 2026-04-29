@@ -1,0 +1,17 @@
+class testClass is
+  this() is
+  end
+
+  method test() is
+    var temp : Integer()
+  end
+
+  var x : 0
+end
+
+class Main is
+  this() is
+    var t : testClass()
+    var res : t.y
+  end
+end

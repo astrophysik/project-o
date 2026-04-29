@@ -1,0 +1,33 @@
+class Base is
+  this(a:Integer) is
+    x := a
+  end
+  
+  method setX(a:Integer) is
+    x := a
+  end
+  
+  var x : 0
+end
+
+class Derived extends Base is
+  this(a:Integer) is
+    y := a
+  end
+
+  method doubleX() is
+    x := x.Mult(2)
+  end
+  method doubleY() is
+    y := y.Mult(2)
+  end
+
+  var y : 0
+end  
+
+class Main is
+  this() is
+    var derObj : Derived(2)
+    var res : derObj.x.Equal(2)
+  end
+end
