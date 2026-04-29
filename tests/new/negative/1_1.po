@@ -1,0 +1,6 @@
+method getNum() : Integer => return 42
+
+class Main is
+  this() is
+  end
+end

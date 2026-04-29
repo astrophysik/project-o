@@ -1,0 +1,13 @@
+class testClass is
+  this() is
+  end
+
+  var x : 42
+end
+
+class Main is
+  this() is
+    var t : testClass()
+    var value : t.x
+  end
+end
