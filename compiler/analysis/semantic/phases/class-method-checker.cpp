@@ -35,6 +35,14 @@ void class_method_checker::visit(ast::class_declaration& node) {
             error_message += std::format("semantic error on checking method {} : {}", method->name, e.what());
         }
     }
+    for (const auto &constructor : node.constructors) {
+        try {
+            constructor->accept(*this);
+        } catch (const std::exception& e) {
+            error_message += std::format("semantic error on checking constructor {} : {}", cls->name, e.what());
+        }
+
+    }
 }
 
 void class_method_checker::visit(ast::method_declaration& node) {
@@ -74,6 +82,17 @@ void class_method_checker::visit(ast::method_declaration& node) {
     }
 }
 
+void class_method_checker::visit(ast::constructor_declaration& node) {
+    current_symbol_table = std::make_unique<structures::symbol_table>(current_class_symbol->class_scope.get());
+    for (const auto& param : node.parameters) {
+        const auto& param_name = param->name;
+        const auto* param_type = program_type_table.resolveType(param->type_name);
+        current_symbol_table->add(std::make_unique<structures::variable_symbol>(param_name, param_type));
+    }
+    method_return_type = nullptr;
+    node.body->accept(*this);
+}
+
 void class_method_checker::visit(ast::block& node) {
     for (auto& entity : node.items) {
         entity->accept(*this);
@@ -98,6 +117,11 @@ void class_method_checker::visit(ast::if_statement& node) {
 }
 
 void class_method_checker::visit(ast::return_statement& node) {
+    if (method_return_type == nullptr) {
+        // this is return in constructor definition, so just return
+        return;
+    }
+
     const auto * return_type = structures::type::inferExpressionType(node.value.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
     if (!structures::type::isSubtype(return_type, method_return_type)) {
         error_message += "type mismatched"; // todo add type print
@@ -127,7 +151,6 @@ void class_method_checker::visit(ast::assignment_statement& node) {
 }
 
 void class_method_checker::visit(ast::parameter_declaration& node) {}
-void class_method_checker::visit(ast::constructor_declaration& node) {}
 void class_method_checker::visit(ast::literal_expression& node) {}
 void class_method_checker::visit(ast::this_expression& node) {}
 void class_method_checker::visit(ast::identifier_expression& node) {}
