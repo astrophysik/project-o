@@ -15,6 +15,7 @@ void check_program(const std::unique_ptr<ast::program>& program) {
     auto [program_symbol_table, program_type_table] = phases::collect_program_classes(program);
     phases::process_classes_content(program, *program_symbol_table, *program_type_table);
     phases::check_field_content(program, *program_symbol_table, *program_type_table);
+    phases::check_method_content(program, *program_symbol_table, *program_type_table);
 }
 
 } // namespace analysis::semantic
