@@ -54,37 +54,80 @@ void class_method_checker::visit(ast::method_declaration& node) {
     const auto* return_type = program_type_table.resolveType(*node.return_type);
     const auto& method_body = *node.body;
 
-    auto err = std::visit(overloaded{[&](const std::unique_ptr<ast::block>&) -> std::optional<std::string> { return std::nullopt; },
-                                     [&](const std::unique_ptr<ast::expression>& body) -> std::optional<std::string> {
-                                         const auto* type = structures::type::inferExpressionType(body.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
-                                         if (!structures::type::isSubtype(type, return_type)) {
-                                             return std::format("type mismatched\n"); // todo implement type to string method
-                                         }
-                                         return std::nullopt;
-                                     }},
-                          method_body);
+    auto err = std::visit(
+        overloaded{
+            [&](const std::unique_ptr<ast::block>& body) -> std::optional<std::string> {
+                method_return_type = return_type;
+                body->accept(*this);
+                return std::nullopt;
+            },
+            [&](const std::unique_ptr<ast::expression>& body) -> std::optional<std::string> {
+                const auto* type = structures::type::inferExpressionType(body.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
+                if (!structures::type::isSubtype(type, return_type)) {
+                    return std::format("type mismatched\n"); // todo implement type to string method
+                }
+                return std::nullopt;
+            }},
+        method_body);
     if (err.has_value()) {
         error_message += *err;
     }
 }
 
-void class_method_checker::visit(ast::variable_declaration& node) {
-    try {
-        auto type_res = structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, current_class_symbol, current_class_symbol->class_scope.get()});
-        auto* symbol = current_class_symbol->class_scope->typed_lookup<structures::variable_symbol>(node.name);
-        symbol->type = type_res;
-    } catch (const std::runtime_error& e) {
-        error_message += e.what();
+void class_method_checker::visit(ast::block& node) {
+    for (auto& entity : node.items) {
+        entity->accept(*this);
     }
 }
 
-void class_method_checker::visit(ast::block& node) {}
+void class_method_checker::visit(ast::variable_declaration& node) {
+    const auto * type_res = structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
+    current_symbol_table->add(std::make_unique<structures::variable_symbol>(node.name, type_res));
+}
+
+void class_method_checker::visit(ast::if_statement& node) {
+    const auto * condition_type = structures::type::inferExpressionType(node.condition.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
+    if (!structures::type::typesEqual(condition_type, program_type_table.resolveType("Boolean"))) {
+        error_message += "condition expression should have boolean type\n";
+        return;
+    }
+    node.true_branch->accept(*this);
+    if (node.false_branch != nullptr) {
+        node.false_branch->accept(*this);
+    }
+}
+
+void class_method_checker::visit(ast::return_statement& node) {
+    const auto * return_type = structures::type::inferExpressionType(node.value.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
+    if (!structures::type::isSubtype(return_type, method_return_type)) {
+        error_message += "type mismatched"; // todo add type print
+    }
+}
+
+void class_method_checker::visit(ast::while_statement& node) {
+    const auto * condition_type = structures::type::inferExpressionType(node.condition.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
+    if (!structures::type::typesEqual(condition_type, program_type_table.resolveType("Boolean"))) {
+        error_message += "condition expression should have boolean type\n";
+        return;
+    }
+    node.body->accept(*this);
+}
+
+void class_method_checker::visit(ast::assignment_statement& node) {
+    const auto * target_symbol = current_symbol_table->typed_lookup<structures::variable_symbol>(node.target);
+    if (target_symbol == nullptr) {
+        error_message += std::format("{} should be already defined variable\n", node.target);
+        return;
+    }
+    const auto * expr_type = structures::type::inferExpressionType(node.value.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
+    if (!structures::type::isSubtype(expr_type, target_symbol->type)) {
+        error_message += "assignment expression should have subtype of variable symbol\n";
+        return;
+    }
+}
+
 void class_method_checker::visit(ast::parameter_declaration& node) {}
 void class_method_checker::visit(ast::constructor_declaration& node) {}
-void class_method_checker::visit(ast::assignment_statement& node) {}
-void class_method_checker::visit(ast::while_statement& node) {}
-void class_method_checker::visit(ast::if_statement& node) {}
-void class_method_checker::visit(ast::return_statement& node) {}
 void class_method_checker::visit(ast::literal_expression& node) {}
 void class_method_checker::visit(ast::this_expression& node) {}
 void class_method_checker::visit(ast::identifier_expression& node) {}

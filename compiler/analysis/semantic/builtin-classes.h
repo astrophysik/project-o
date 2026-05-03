@@ -126,6 +126,8 @@ inline void add_builtin_classes(structures::symbol_table& sym_table, structures:
     add_method(boolean_ptr, "And", type_table.resolveType("Boolean"), {type_table.resolveType("Boolean")}, type_table);
     add_method(boolean_ptr, "Xor", type_table.resolveType("Boolean"), {type_table.resolveType("Boolean")}, type_table);
     add_method(boolean_ptr, "Not", type_table.resolveType("Boolean"), {}, type_table);
+
+    add_constructor(unit_ptr, {}, type_table);
 }
 
 } // namespace analysis::semantic::builtin
