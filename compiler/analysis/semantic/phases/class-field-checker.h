@@ -11,9 +11,9 @@ namespace analysis::semantic::phases {
 
 namespace details {
 
-class class_content_checker : public ast::visitor {
+class class_field_checker : public ast::visitor {
 public:
-    explicit class_content_checker(structures::symbol_table& symbol_table, structures::type_table& type_table)
+    explicit class_field_checker(structures::symbol_table& symbol_table, structures::type_table& type_table)
         : program_symbol_table(symbol_table), program_type_table(type_table) {}
 
     void visit(ast::program& node) override;
@@ -50,8 +50,8 @@ private:
 
 } // namespace details
 
-inline void check_classes_content(const std::unique_ptr<ast::program>& program, structures::symbol_table& symbol_table, structures::type_table& type_table) {
-    details::class_content_checker class_content_checker(symbol_table, type_table);
+inline void check_field_content(const std::unique_ptr<ast::program>& program, structures::symbol_table& symbol_table, structures::type_table& type_table) {
+    details::class_field_checker class_content_checker(symbol_table, type_table);
     program->accept(class_content_checker);
     class_content_checker.get_result();
 }

@@ -4,7 +4,8 @@ set(COMPILER_ANALYSIS
         ${COMPILER_DIR}/analysis/print/details/ast-printer.cpp
         ${COMPILER_DIR}/analysis/semantic/phases/class-collector.cpp
         ${COMPILER_DIR}/analysis/semantic/phases/class-body-collector.cpp
-        ${COMPILER_DIR}/analysis/semantic/phases/class-content-checker.cpp
+        ${COMPILER_DIR}/analysis/semantic/phases/class-field-checker.cpp
+        ${COMPILER_DIR}/analysis/semantic/phases/class-method-checker.cpp
 )
 
 set(COMPILER_MAIN
