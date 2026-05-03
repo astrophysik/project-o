@@ -9,39 +9,50 @@
 
 namespace {
 
-std::string format_single_type(const structures::type* t) {
-    if (auto* cls = dynamic_cast<const structures::class_type*>(t)) {
-        return cls->name;
-    }
-    switch (t->kind) {
-        case structures::type_kind::Int: return "Integer";
-        case structures::type_kind::Bool: return "Boolean";
-        case structures::type_kind::Real: return "Real";
-        case structures::type_kind::Unit: return "Unit";
-        case structures::type_kind::Error: return "<error>";
-        default: return "<unknown>";
-    }
-}
-
 std::string format_argument_types(const std::vector<const structures::type*>& types) {
     std::string result = "(";
     for (size_t i = 0; i < types.size(); ++i) {
-        if (i > 0) result += ", ";
-        result += format_single_type(types[i]);
+        if (i != types.size() -1)  {
+            result += ", ";
+        }
+        result += types[i]->toString();
     }
     result += ")";
     return result;
 }
 
-structures::method_symbol* find_method_in_hierarchy(structures::class_symbol* class_symbol, const std::string& name) {
+structures::method_symbol* find_method_in_hierarchy(
+    structures::class_symbol* class_symbol,
+    const std::string& name,
+    const std::vector<const structures::type*>& argument_types)
+{
     auto* current = class_symbol;
+    structures::method_symbol* best_match = nullptr;
+
     while (current != nullptr) {
-        if (auto* method = current->class_scope->typed_lookup<structures::method_symbol>(name)) {
-            return method;
+        for (auto* method : current->methods) {
+            if (method->original_name != name) continue;
+            if (method->parameter_types.size() != argument_types.size()) continue;
+
+            bool matches = true;
+            for (size_t i = 0; i < argument_types.size(); ++i) {
+                if (!structures::type::isSubtype(argument_types[i], method->parameter_types[i])) {
+                    matches = false;
+                    break;
+                }
+            }
+
+            if (matches) {
+                if (best_match != nullptr) {
+                    throw std::runtime_error{std::format(
+                        "Ambiguous method call '{}' - multiple overloads match\n", name)};
+                }
+                best_match = method;
+            }
         }
         current = current->base_class;
     }
-    return nullptr;
+    return best_match;
 }
 
 structures::variable_symbol* find_field_in_hierarchy(structures::class_symbol* class_symbol, const std::string& name) {
@@ -105,7 +116,7 @@ void validate_method_call(
     if (argument_types.size() != method->parameter_types.size()) {
         throw std::runtime_error{std::format(
             "Method '{}': expected {} argument(s), got {}\n",
-            method->name,
+            method->original_name,
             method->parameter_types.size(),
             argument_types.size())};
     }
@@ -114,10 +125,10 @@ void validate_method_call(
         if (!structures::type::isSubtype(argument_types[i], method->parameter_types[i])) {
             throw std::runtime_error{std::format(
                 "Method '{}': argument {} type mismatch - expected '{}', found '{}'\n",
-                method->name,
+                method->original_name,
                 i + 1,
-                format_single_type(method->parameter_types[i]),
-                format_single_type(argument_types[i]))};
+                method->parameter_types[i]->toString(),
+                argument_types[i]->toString())};
         }
     }
 }
@@ -155,12 +166,10 @@ const structures::type* infer_call_expression(
             return class_type;
         }
 
-        auto* method = find_method_in_hierarchy(object_class, member_expr->member);
+        auto* method = find_method_in_hierarchy(object_class, member_expr->member, argument_types);
         if (method == nullptr) {
             throw std::runtime_error{std::format("method '{}' not found in class '{}'\n", member_expr->member, class_type->name)};
         }
-
-        validate_method_call(method, argument_types);
 
         if (method->return_type.has_value()) {
             return method->return_type.value();

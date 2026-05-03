@@ -28,6 +28,18 @@ struct symbol {
     virtual ~symbol() = default;
 };
 
+inline std::string mangle_method_name(const std::string& name, const std::vector<const type*>& param_types) {
+    std::string result = name + "(";
+    for (size_t i = 0; i < param_types.size(); ++i) {
+        if (i != param_types.size() - 1) {
+            result += ", ";
+        }
+        result += param_types[i]->toString();
+    }
+    result += ")";
+    return result;
+}
+
 struct symbol_table {
     symbol_table(symbol_table* p)
         : parent(p){};
@@ -78,12 +90,14 @@ struct variable_symbol : symbol {
 };
 
 struct method_symbol : symbol {
+    std::string original_name;
     std::optional<const structures::type *> return_type;
     std::vector<const structures::type *> parameter_types;
     std::unique_ptr<symbol_table> method_scope;
 
-    method_symbol(std::string name, symbol_table* parent_scope, std::optional<const structures::type *> ret_type, std::vector<const structures::type *> params_type)
-        : symbol(std::move(name), symbol_kind::method_symbol),
+    method_symbol(std::string mangled_name, std::string orig_name, symbol_table* parent_scope, std::optional<const structures::type *> ret_type, std::vector<const structures::type *> params_type)
+        : symbol(std::move(mangled_name), symbol_kind::method_symbol),
+          original_name(std::move(orig_name)),
           method_scope(std::make_unique<symbol_table>(parent_scope)),
           return_type(std::move(ret_type)),
           parameter_types(std::move(params_type)) {}

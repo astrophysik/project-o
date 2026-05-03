@@ -39,7 +39,7 @@ public:
     explicit type(type_kind k) : kind(k) {}
     virtual ~type() = default;
     
-    virtual std::string toString() {return  "";}
+    virtual std::string toString() const {return  "";}
 
     static bool isSubtype(const type* sub, const type* super);
     static bool typesEqual(const type* t1, const type* t2);

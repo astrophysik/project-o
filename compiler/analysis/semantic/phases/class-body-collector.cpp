@@ -7,21 +7,6 @@
 
 #include "compiler/compilation-structures/ast.h"
 
-namespace {
-
-std::string make_constructor_signature(const std::vector<std::unique_ptr<ast::parameter_declaration>>& params, const std::string & name) {
-    std::string sig = name + "(";
-    for (size_t i = 0; i < params.size(); ++i) {
-        if (i > 0) {
-            sig += ",";
-        }
-        sig += params[i]->type_name;
-    }
-    sig += ")";
-    return sig;
-}
-} // namespace
-
 namespace analysis::semantic::phases::details {
 
 void class_body_collector::visit(ast::program& node) {
@@ -38,8 +23,8 @@ void class_body_collector::visit(ast::class_declaration& node) {
     }
 
     field_names.clear();
+    constructor_names.clear();
     method_names.clear();
-    constructor_signatures.clear();
 
     try {
         for (auto& field : node.fields) {
@@ -73,12 +58,6 @@ void class_body_collector::visit(ast::variable_declaration& node) {
 }
 
 void class_body_collector::visit(ast::method_declaration& node) {
-    if (method_names.contains(node.name)) {
-        error_message += std::format("Duplicate method '{}' in class '{}'\n", node.name, current_class->name);
-        return;
-    }
-    method_names.insert(node.name);
-
     std::optional<const structures::type*> return_type =
         node.return_type.transform([this](const std::string& type_name) { return program_type_table.resolveType(type_name); });
     std::vector<const structures::type *> param_types;
@@ -86,7 +65,15 @@ void class_body_collector::visit(ast::method_declaration& node) {
         param_types.push_back(program_type_table.resolveType(param->type_name));
     }
 
-    auto method = std::make_unique<structures::method_symbol>(node.name, current_class->class_scope.get(), return_type, std::move(param_types));
+    std::string mangled = structures::mangle_method_name(node.name, param_types);
+
+    if (method_names.contains(mangled)) {
+        error_message += std::format("Duplicate method '{}' with same parameters in class '{}'\n", node.name, current_class->name);
+        return;
+    }
+    method_names.insert(mangled);
+
+    auto method = std::make_unique<structures::method_symbol>(mangled, node.name, current_class->class_scope.get(), return_type, std::move(param_types));
 
     for (auto& param : node.parameters) {
         auto param_sym = std::make_unique<structures::variable_symbol>(param->name, program_type_table.resolveType(param->type_name));
@@ -97,19 +84,19 @@ void class_body_collector::visit(ast::method_declaration& node) {
 }
 
 void class_body_collector::visit(ast::constructor_declaration& node) {
-    std::string signature = make_constructor_signature(node.parameters, current_class->name);
-    if (constructor_signatures.contains(signature)) {
-        error_message += std::format("Duplicate constructor with signature '{}' in class '{}'\n", signature, current_class->name);
-        return;
-    }
-    constructor_signatures.insert(signature);
-
     std::vector<const structures::type *> param_types;
     for (auto& param : node.parameters) {
         param_types.push_back(program_type_table.resolveType(param->type_name));
     }
 
-    auto ctor = std::make_unique<structures::method_symbol>(signature, current_class->class_scope.get(), program_type_table.resolveType(current_class->name), std::move(param_types));
+    std::string mangled = structures::mangle_method_name(current_class->name, param_types);
+    if (constructor_names.contains(mangled)) {
+        error_message += std::format("Duplicate constructor with same signature '{}' in class '{}'\n", current_class->name, current_class->name);
+        return;
+    }
+    constructor_names.insert(mangled);
+
+    auto ctor = std::make_unique<structures::method_symbol>(mangled, current_class->name, current_class->class_scope.get(), program_type_table.resolveType(current_class->name), std::move(param_types));
     for (auto& param : node.parameters) {
         auto param_sym = std::make_unique<structures::variable_symbol>(param->name, program_type_table.resolveType(param->type_name));
         ctor->method_scope->add(std::move(param_sym));

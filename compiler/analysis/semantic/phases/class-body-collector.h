@@ -51,7 +51,7 @@ private:
 
     std::unordered_set<std::string> field_names;
     std::unordered_set<std::string> method_names;
-    std::unordered_set<std::string> constructor_signatures;
+    std::unordered_set<std::string> constructor_names;
 };
 
 } // namespace details

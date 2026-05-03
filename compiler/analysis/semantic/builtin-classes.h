@@ -10,13 +10,15 @@ inline void add_method(structures::class_symbol* cls,
                        const structures::type* return_type,
                        std::vector<const structures::type*> param_types,
                        structures::type_table& type_table) {
-    auto method = std::make_unique<structures::method_symbol>(name, cls->class_scope.get(), return_type, std::move(param_types));
+    std::string mangled = structures::mangle_method_name(name, param_types);
+    auto method = std::make_unique<structures::method_symbol>(mangled, name, cls->class_scope.get(), return_type, std::move(param_types));
     cls->methods.push_back(method.get());
     cls->class_scope->add(std::move(method));
 }
 
 inline void add_constructor(structures::class_symbol* cls, std::vector<const structures::type*> param_types, structures::type_table& type_table) {
-    auto ctor = std::make_unique<structures::method_symbol>(cls->name, cls->class_scope.get(), type_table.resolveType(cls->name), std::move(param_types));
+    std::string mangled = structures::mangle_method_name(cls->name, param_types);
+    auto ctor = std::make_unique<structures::method_symbol>(mangled, cls->name, cls->class_scope.get(), type_table.resolveType(cls->name), std::move(param_types));
     cls->constructors.push_back(std::move(ctor));
 }
 
