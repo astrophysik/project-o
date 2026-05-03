@@ -11,6 +11,7 @@
 namespace structures {
 
 class class_symbol;
+class symbol_table;
 
 class type;
 class type_table;
@@ -30,6 +31,7 @@ public:
     struct infer_context {
         structures::type_table * type_table;
         structures::class_symbol * class_symbol;
+        structures::symbol_table * symbol_table;
     };
 
     const type_kind kind;

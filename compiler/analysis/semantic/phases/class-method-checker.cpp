@@ -29,7 +29,11 @@ void class_method_checker::visit(ast::class_declaration& node) {
     assert(cls != nullptr);
     current_class_symbol = cls;
     for (const auto& method : node.methods) {
-        method->accept(*this);
+        try {
+            method->accept(*this);
+        } catch (const std::exception& e) {
+            error_message += std::format("semantic error on checking method {} : {}", method->name, e.what());
+        }
     }
 }
 
@@ -41,20 +45,22 @@ void class_method_checker::visit(ast::method_declaration& node) {
         error_message += "methods without return type are forbidden\n";
         return;
     }
+    current_symbol_table = std::make_unique<structures::symbol_table>(current_class_symbol->class_scope.get());
+    for (const auto& param : node.parameters) {
+        const auto& param_name = param->name;
+        const auto* param_type = program_type_table.resolveType(param->type_name);
+        current_symbol_table->add(std::make_unique<structures::variable_symbol>(param_name, param_type));
+    }
     const auto* return_type = program_type_table.resolveType(*node.return_type);
     const auto& method_body = *node.body;
 
-    auto err = std::visit(overloaded{[](const std::unique_ptr<ast::block>&) -> std::optional<std::string> { return std::nullopt; },
+    auto err = std::visit(overloaded{[&](const std::unique_ptr<ast::block>&) -> std::optional<std::string> { return std::nullopt; },
                                      [&](const std::unique_ptr<ast::expression>& body) -> std::optional<std::string> {
-                                         try {
-                                             const auto* type = structures::type::inferExpressionType(body.get(), {&program_type_table, current_class_symbol});
-                                             if (!structures::type::isSubtype(type, return_type)) {
-                                                 return std::format("type mismatched\n"); //todo implement type to string method
-                                             }
-                                             return std::nullopt;
-                                         } catch (const std::exception& e) {
-                                             return std::format("error on type infer of {} body {}", node.name, e.what());
+                                         const auto* type = structures::type::inferExpressionType(body.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
+                                         if (!structures::type::isSubtype(type, return_type)) {
+                                             return std::format("type mismatched\n"); // todo implement type to string method
                                          }
+                                         return std::nullopt;
                                      }},
                           method_body);
     if (err.has_value()) {
@@ -64,7 +70,7 @@ void class_method_checker::visit(ast::method_declaration& node) {
 
 void class_method_checker::visit(ast::variable_declaration& node) {
     try {
-        auto type_res = structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, current_class_symbol});
+        auto type_res = structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, current_class_symbol, current_class_symbol->class_scope.get()});
         auto* symbol = current_class_symbol->class_scope->typed_lookup<structures::variable_symbol>(node.name);
         symbol->type = type_res;
     } catch (const std::runtime_error& e) {

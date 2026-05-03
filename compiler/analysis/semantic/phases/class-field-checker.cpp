@@ -25,7 +25,7 @@ void class_field_checker::visit(ast::class_declaration& node) {
 
 void class_field_checker::visit(ast::variable_declaration& node) {
     try {
-        auto type_res = structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, current_class_symbol});
+        auto type_res = structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, current_class_symbol, current_class_symbol->class_scope.get()});
         auto * symbol = current_class_symbol->class_scope->typed_lookup<structures::variable_symbol>(node.name);
         symbol->type = type_res;
     } catch (const std::runtime_error& e) {

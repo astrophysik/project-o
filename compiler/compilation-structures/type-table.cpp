@@ -132,7 +132,7 @@ const structures::type* infer_call_expression(
     }
 
     if (auto* ident_expr = dynamic_cast<ast::identifier_expression*>(call_expr->callee.get())) {
-        if (auto* target_class = context.class_symbol->class_scope->typed_lookup<structures::class_symbol>(ident_expr->name)) {
+        if (auto* target_class = context.symbol_table->typed_lookup<structures::class_symbol>(ident_expr->name)) {
             resolve_constructor_call(target_class, argument_types);
             return context.type_table->resolveType(target_class->name);
         }
@@ -147,7 +147,7 @@ const structures::type* infer_call_expression(
             throw std::runtime_error{"cannot call method on non-class type\n"};
         }
 
-        auto* object_class = context.class_symbol->class_scope->typed_lookup<structures::class_symbol>(class_type->name);
+        auto* object_class = context.symbol_table->typed_lookup<structures::class_symbol>(class_type->name);
         assert(object_class != nullptr);
 
         if (object_class->name == member_expr->member) {
@@ -190,19 +190,19 @@ const structures::type* infer_expression(const ast::expression* expression, stru
     }
 
     if (auto* ident = dynamic_cast<const ast::identifier_expression*>(expression)) {
-        if (auto* var = context.class_symbol->class_scope->typed_lookup<structures::variable_symbol>(ident->name)) {
+        if (auto* var = context.symbol_table->typed_lookup<structures::variable_symbol>(ident->name)) {
             return var->type;
         }
-        if (auto* cls = context.class_symbol->class_scope->typed_lookup<structures::class_symbol>(ident->name)) {
+        if (auto* cls = context.symbol_table->typed_lookup<structures::class_symbol>(ident->name)) {
             return context.type_table->resolveType(cls->name);
         }
-        throw std::runtime_error{std::format("cannot use non variable symbol for field initialization {}\n", ident->name)};
+        throw std::runtime_error{std::format("undefined variable symbol {}\n", ident->name)};
     }
 
     if (auto* member = dynamic_cast<const ast::member_expression*>(expression)) {
         auto object_type = infer_expression(member->object.get(), context);
         if (const auto* cls_type = dynamic_cast<const structures::class_type*>(object_type)) {
-            auto* cls = context.class_symbol->class_scope->typed_lookup<structures::class_symbol>(cls_type->name);
+            auto* cls = context.symbol_table->typed_lookup<structures::class_symbol>(cls_type->name);
             assert(cls != nullptr);
             auto* field = find_field_in_hierarchy(cls, member->member);
             if (field == nullptr) {
