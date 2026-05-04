@@ -168,7 +168,7 @@ const structures::type* infer_call_expression(
 
         auto* method = find_method_in_hierarchy(object_class, member_expr->member, argument_types);
         if (method == nullptr) {
-            throw std::runtime_error{std::format("method '{}' not found in class '{}'\n", member_expr->member, class_type->name)};
+            throw std::runtime_error{std::format("method '{}' with arguments '{}' not found in class '{}'\n", member_expr->member, format_argument_types(argument_types), class_type->name)};
         }
 
         if (method->return_type.has_value()) {

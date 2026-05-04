@@ -28,6 +28,10 @@ void class_collector::visit(ast::class_declaration& node) {
             error_message += std::format("Class {} inheritance of undefined class {}\n", node.name, *node.base_class);
             return;
         }
+    } else {
+        // by default class user-defined classes extends AnyRef
+        base_class = program_symbol_table->typed_lookup<structures::class_symbol>("AnyRef");
+        node.base_class = "AnyRef";
     }
     auto sym{std::make_unique<structures::class_symbol>(node.name, program_symbol_table.get(), base_class)};
     program_symbol_table->add(std::move(sym));
