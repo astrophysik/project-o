@@ -66,6 +66,9 @@ void class_method_checker::visit(ast::method_declaration& node) {
             [&](const std::unique_ptr<ast::block>& body) -> std::optional<std::string> {
                 method_return_type = return_type;
                 body->accept(*this);
+                if (!std::exchange(definitely_returns, false)) {
+                    return std::format("method {} does not return on all code paths\n", node.name);
+                }
                 return std::nullopt;
             },
             [&](const std::unique_ptr<ast::expression>& body) -> std::optional<std::string> {
@@ -90,6 +93,7 @@ void class_method_checker::visit(ast::constructor_declaration& node) {
     }
     method_return_type = nullptr;
     node.body->accept(*this);
+    std::exchange(definitely_returns, false);
 }
 
 void class_method_checker::visit(ast::block& node) {
@@ -112,14 +116,29 @@ void class_method_checker::visit(ast::if_statement& node) {
         return;
     }
     node.true_branch->accept(*this);
+    bool then_returns = std::exchange(definitely_returns, false);
+
+    bool else_returns = false;
     if (node.false_branch != nullptr) {
         node.false_branch->accept(*this);
+        else_returns = std::exchange(definitely_returns, false);
     }
+
+    definitely_returns = then_returns && else_returns;
 }
 
 void class_method_checker::visit(ast::return_statement& node) {
+    definitely_returns = true;
     if (method_return_type == nullptr) {
+        if (node.value != nullptr) {
+            error_message += std::format("constructors cannot return value\n");
+        }
         // this is return in constructor definition, so just return
+        return;
+    }
+
+    if (node.value == nullptr) {
+        error_message += std::format("method must return a value of type {}\n", method_return_type->toString());
         return;
     }
 

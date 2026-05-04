@@ -48,6 +48,7 @@ private:
     std::unique_ptr<structures::symbol_table> current_symbol_table = nullptr;
     structures::class_symbol* current_class_symbol = nullptr;
     const structures::type* method_return_type = nullptr;
+    bool definitely_returns = false;
 };
 
 } // namespace details
