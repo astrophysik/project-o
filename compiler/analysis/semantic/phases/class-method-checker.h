@@ -3,9 +3,9 @@
 #include <stdexcept>
 #include <string>
 
+#include "compiler/compilation-structures/ast/parsing/ast-visitor.h"
+#include "compiler/compilation-structures/ast/parsing/ast.h"
 #include "compiler/compilation-structures/symbol-table.h"
-#include "compiler/compilation-structures/ast-visitor.h"
-#include "compiler/compilation-structures/ast.h"
 
 namespace analysis::semantic::phases {
 

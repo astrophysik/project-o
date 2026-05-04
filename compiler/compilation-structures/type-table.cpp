@@ -4,7 +4,7 @@
 #include <cassert>
 #include <stdexcept>
 
-#include "compiler/compilation-structures/ast.h"
+#include "compiler/compilation-structures/ast/parsing/ast.h"
 #include "compiler/compilation-structures/symbol-table.h"
 
 namespace {

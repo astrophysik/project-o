@@ -7,7 +7,8 @@
 #include "compiler/analysis/semantic/phases/class-collector.h"
 #include "compiler/analysis/semantic/phases/class-field-checker.h"
 #include "compiler/analysis/semantic/phases/class-method-checker.h"
-#include "compiler/compilation-structures/ast.h"
+#include "compiler/compilation-structures/ast/codegen/codegen-ast.h"
+#include "compiler/compilation-structures/ast/parsing/ast.h"
 
 namespace analysis::semantic {
 

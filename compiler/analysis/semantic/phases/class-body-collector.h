@@ -4,8 +4,8 @@
 #include <string>
 #include <unordered_set>
 
-#include "compiler/compilation-structures/ast-visitor.h"
-#include "compiler/compilation-structures/ast.h"
+#include "compiler/compilation-structures/ast/parsing/ast-visitor.h"
+#include "compiler/compilation-structures/ast/parsing/ast.h"
 #include "compiler/compilation-structures/symbol-table.h"
 
 namespace analysis::semantic::phases {

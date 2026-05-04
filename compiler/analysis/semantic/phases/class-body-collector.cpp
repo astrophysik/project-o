@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "compiler/compilation-structures/ast.h"
+#include "compiler/compilation-structures/ast/parsing/ast.h"
 
 namespace analysis::semantic::phases::details {
 

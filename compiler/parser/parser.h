@@ -7,7 +7,7 @@
 #include <string_view>
 #include <vector>
 
-#include "compiler/compilation-structures/ast.h"
+#include "compiler/compilation-structures/ast/parsing/ast.h"
 #include "compiler/lexer/token.h"
 
 namespace parser {
