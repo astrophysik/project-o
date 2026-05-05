@@ -1,7 +1,7 @@
 #include "compiler/compilation-structures/type-table.h"
 
-#include <format>
 #include <cassert>
+#include <format>
 #include <stdexcept>
 
 #include "compiler/compilation-structures/ast/parsing/ast.h"
@@ -12,7 +12,7 @@ namespace {
 std::string format_argument_types(const std::vector<const structures::type*>& types) {
     std::string result = "(";
     for (size_t i = 0; i < types.size(); ++i) {
-        if (i != types.size() -1)  {
+        if (i != types.size() - 1) {
             result += ", ";
         }
         result += types[i]->toString();
@@ -21,18 +21,17 @@ std::string format_argument_types(const std::vector<const structures::type*>& ty
     return result;
 }
 
-structures::method_symbol* find_method_in_hierarchy(
-    structures::class_symbol* class_symbol,
-    const std::string& name,
-    const std::vector<const structures::type*>& argument_types)
-{
+structures::method_symbol*
+find_method_in_hierarchy(structures::class_symbol* class_symbol, const std::string& name, const std::vector<const structures::type*>& argument_types) {
     auto* current = class_symbol;
     structures::method_symbol* best_match = nullptr;
 
     while (current != nullptr) {
         for (auto* method : current->methods) {
-            if (method->original_name != name) continue;
-            if (method->parameter_types.size() != argument_types.size()) continue;
+            if (method->original_name != name)
+                continue;
+            if (method->parameter_types.size() != argument_types.size())
+                continue;
 
             bool matches = true;
             for (size_t i = 0; i < argument_types.size(); ++i) {
@@ -44,8 +43,7 @@ structures::method_symbol* find_method_in_hierarchy(
 
             if (matches) {
                 if (best_match != nullptr) {
-                    throw std::runtime_error{std::format(
-                        "Ambiguous method call '{}' - multiple overloads match\n", name)};
+                    throw std::runtime_error{std::format("Ambiguous method call '{}' - multiple overloads match\n", name)};
                 }
                 best_match = method;
             }
@@ -68,10 +66,7 @@ structures::variable_symbol* find_field_in_hierarchy(structures::class_symbol* c
 
 const structures::type* infer_expression(const ast::expression* expression, structures::type::infer_context context);
 
-void resolve_constructor_call(
-    structures::class_symbol* target_class,
-    const std::vector<const structures::type*>& argument_types)
-{
+void resolve_constructor_call(structures::class_symbol* target_class, const std::vector<const structures::type*>& argument_types) {
     if (target_class->constructors.empty()) {
         throw std::runtime_error{std::format("Class '{}' has no constructors defined\n", target_class->name)};
     }
@@ -90,9 +85,8 @@ void resolve_constructor_call(
         }
         if (types_match) {
             if (matching_constructor != nullptr) {
-                throw std::runtime_error{std::format(
-                    "Ambiguous constructor call for class '{}': multiple overloads match the argument types\n",
-                    target_class->name)};
+                throw std::runtime_error{
+                    std::format("Ambiguous constructor call for class '{}': multiple overloads match the argument types\n", target_class->name)};
             }
             matching_constructor = ctor.get();
         }
@@ -109,34 +103,24 @@ void resolve_constructor_call(
     }
 }
 
-void validate_method_call(
-    structures::method_symbol* method,
-    const std::vector<const structures::type*>& argument_types)
-{
+void validate_method_call(structures::method_symbol* method, const std::vector<const structures::type*>& argument_types) {
     if (argument_types.size() != method->parameter_types.size()) {
-        throw std::runtime_error{std::format(
-            "Method '{}': expected {} argument(s), got {}\n",
-            method->original_name,
-            method->parameter_types.size(),
-            argument_types.size())};
+        throw std::runtime_error{
+            std::format("Method '{}': expected {} argument(s), got {}\n", method->original_name, method->parameter_types.size(), argument_types.size())};
     }
 
     for (size_t i = 0; i < argument_types.size(); ++i) {
         if (!structures::type::isSubtype(argument_types[i], method->parameter_types[i])) {
-            throw std::runtime_error{std::format(
-                "Method '{}': argument {} type mismatch - expected '{}', found '{}'\n",
-                method->original_name,
-                i + 1,
-                method->parameter_types[i]->toString(),
-                argument_types[i]->toString())};
+            throw std::runtime_error{std::format("Method '{}': argument {} type mismatch - expected '{}', found '{}'\n",
+                                                 method->original_name,
+                                                 i + 1,
+                                                 method->parameter_types[i]->toString(),
+                                                 argument_types[i]->toString())};
         }
     }
 }
 
-const structures::type* infer_call_expression(
-    const ast::call_expression* call_expr,
-    structures::type::infer_context context)
-{
+const structures::type* infer_call_expression(const ast::call_expression* call_expr, structures::type::infer_context context) {
     std::vector<const structures::type*> argument_types;
     for (const auto& arg : call_expr->arguments) {
         argument_types.push_back(infer_expression(arg.get(), context));
@@ -151,6 +135,14 @@ const structures::type* infer_call_expression(
     }
 
     if (auto* member_expr = dynamic_cast<ast::member_expression*>(call_expr->callee.get())) {
+        if (auto* obj_ident = dynamic_cast<ast::identifier_expression*>(member_expr->object.get()); obj_ident && obj_ident->name == member_expr->member) {
+            // Constructor call: ClassName(args)
+            auto* target_class = context.symbol_table->typed_lookup<structures::class_symbol>(obj_ident->name);
+            assert(target_class != nullptr);
+            resolve_constructor_call(target_class, argument_types);
+            return context.type_table->resolveType(target_class->name);
+        }
+
         auto object_type = infer_expression(member_expr->object.get(), context);
 
         const auto* class_type = dynamic_cast<const structures::class_type*>(object_type);
@@ -168,7 +160,10 @@ const structures::type* infer_call_expression(
 
         auto* method = find_method_in_hierarchy(object_class, member_expr->member, argument_types);
         if (method == nullptr) {
-            throw std::runtime_error{std::format("method '{}' with arguments '{}' not found in class '{}'\n", member_expr->member, format_argument_types(argument_types), class_type->name)};
+            throw std::runtime_error{std::format("method '{}' with arguments '{}' not found in class '{}'\n",
+                                                 member_expr->member,
+                                                 format_argument_types(argument_types),
+                                                 class_type->name)};
         }
 
         if (method->return_type.has_value()) {
@@ -203,7 +198,8 @@ const structures::type* infer_expression(const ast::expression* expression, stru
             return var->type;
         }
         if (auto* cls = context.symbol_table->typed_lookup<structures::class_symbol>(ident->name)) {
-            return context.type_table->resolveType(cls->name);
+            throw std::runtime_error{std::format("{} is class name and can't be used in expression\n", ident->name)};
+            ;
         }
         throw std::runtime_error{std::format("undefined variable symbol {}\n", ident->name)};
     }
