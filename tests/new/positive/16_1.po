@@ -1,13 +1,9 @@
 class Main is
   method test() : Integer is
-  
+    return 0
   end
 
   this() is
-    var res : test()
-  end
-
-  method test() : Integer is
-    return Integer(42)
+    var res : this.test()
   end
 end

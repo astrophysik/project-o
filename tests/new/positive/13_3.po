@@ -1,9 +1,10 @@
 class Main is
   method test() : Integer is
     var temp : Integer(42)
+    return temp
   end
 
   this() is
-    var res : test()
+    var res : this.test()
   end
 end

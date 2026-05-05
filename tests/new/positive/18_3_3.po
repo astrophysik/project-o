@@ -3,9 +3,10 @@ class Main is
     if true then
       return Integer(42)
     end
+    return 0
   end
 
-  this() is   
+  this() is
     if true then
       var res : false
       res := true
@@ -13,7 +14,7 @@ class Main is
       while i.Less(Integer(5)) loop
         i :=i.Plus(1)
       end
-      var int : returnFromIf()
+      var int : this.returnFromIf()
     end
   end
 end

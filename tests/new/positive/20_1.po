@@ -1,3 +1,19 @@
+class test is
+  var first : Integer(0)
+  var second : Integer(0)
+
+  method getFirst() : Integer => first
+  method setBoth(a:Integer, b:Integer) : Unit is
+    first := a
+    second := b
+    return Unit()
+  end
+
+  this(a:Integer, b:Integer) is
+    var i : this.setBoth(a,b)
+  end
+end
+
 class Main is
   var first : Integer(1)
   var second : Integer(2)
@@ -7,7 +23,7 @@ class Main is
 
   this() is
     var obj : test(Integer(0), Integer(0))
-    obj.setBoth(Integer(1), Integer(4))
-    var int : getFirst().Plus(getSecond())
+    var r : obj.setBoth(Integer(1), Integer(4))
+    var int : this.getFirst().Plus(this.getSecond())
   end
 end

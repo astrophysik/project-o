@@ -4,6 +4,6 @@ class Main is
   end
 
   this() is
-    var res : test(Integer(42))
+    var res : this.test(Integer(42))
   end
 end

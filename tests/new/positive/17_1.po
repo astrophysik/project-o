@@ -1,14 +1,16 @@
 class Main is
-  method test(a:Integer) is
+  method test(a:Integer) : Unit is
     var temp : a
+    return Unit()
   end
 
-  method test(a:Real) is
+  method test(a:Real): Unit is
     var temp : a
+    return Unit()
   end
 
   this() is
-    var resInt : test(Integer(42))
-    var resReal : test(Real(42.0))
+    var resInt : this.test(Integer(42))
+    var resReal : this.test(Real(42.0))
   end
 end

@@ -20,18 +20,18 @@ class Main is
       var j : Integer(0)
       while j.Less(Integer(2)) loop
         j := j.Plus(Integer(1))
-      end        
+      end
       i := i.Plus(Integer(1))
     end
 
-    while i.Less(getNum()) loop
+    while i.Less(this.getNum()) loop
       if i.Greater(Integer(20)) then
         i := i.Plus(Integer(1))
       else
-        i := i.Plus(Integer(2)) 
+        i := i.Plus(Integer(2))
       end
     end
-    
-    var int : returnFromWhile()
+
+    var int : this.returnFromWhile()
   end
 end

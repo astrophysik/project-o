@@ -1,9 +1,5 @@
 class Main is
   method test() : Integer is
-
-  end
-
-  method test() : Integer is
     return Integer(42)
   end
 

@@ -2,7 +2,7 @@ class Main is
   this() is
     var i : Boolean(false)
 
-    while i.Equal(Boolean(true)) loop
+    while i.And(Boolean(true)) loop
       i := true
     end
   end

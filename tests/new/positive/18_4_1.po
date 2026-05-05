@@ -8,17 +8,17 @@ class Main is
   end
 
   method retFunc() : Integer is
-    return retPrimary()
+    return this.retPrimary()
   end
 
   method retExpr() : Integer is
     return Integer(42).Plus(Integer(1))
   end
 
-  this() is   
-    var intPrimary : retPrimary()
-    var intConstr : retConstr()
-    var intFunc : retFunc()
-    var intExpr : retExpr()
+  this() is
+    var intPrimary : this.retPrimary()
+    var intConstr : this.retConstr()
+    var intFunc : this.retFunc()
+    var intExpr : this.retExpr()
   end
 end

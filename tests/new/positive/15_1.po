@@ -2,6 +2,6 @@ class Main is
   method test() : Integer => Integer(42)
 
   this() is
-    var res : test()
+    var res : this.test()
   end
 end

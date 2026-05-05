@@ -7,6 +7,6 @@ class Main is
     var one : 1
     var two : Integer(2)
     var three : Integer(1).Plus(Integer(2))
-    var four : double(two)
+    var four : this.double(two)
   end
 end

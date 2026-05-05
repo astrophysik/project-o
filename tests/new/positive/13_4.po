@@ -1,9 +1,10 @@
 class Main is
-  method test() is
+  method test() : Unit is
     var temp : Integer(42)
+    return Unit()
   end
 
   this() is
-    var i : test()
+    var i : this.test()
   end
 end

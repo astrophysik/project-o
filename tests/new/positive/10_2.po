@@ -2,7 +2,7 @@ class Base is
   var value : Integer(0)
 end
 
-class Derived is
+class Derived extends Base is
   this() is
     value := Integer(42)
   end
@@ -10,6 +10,6 @@ end
 
 class Main is
   this() is
-    var obj : Derived
+    var obj : Derived()
   end
 end
