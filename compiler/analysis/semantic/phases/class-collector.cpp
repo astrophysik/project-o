@@ -18,14 +18,14 @@ void class_collector::visit(ast::program& node) {
 
 void class_collector::visit(ast::class_declaration& node) {
     if (program_symbol_table->lookup(node.name) != nullptr) {
-        error_message += std::format("Class redefinition {}\n", node.name);
+        error_message += std::format("Class redefinition: class '{}' is already defined\n", node.name);
         return;
     }
     structures::class_symbol* base_class = nullptr;
     if (node.base_class.has_value()) {
         base_class = program_symbol_table->typed_lookup<structures::class_symbol>(*node.base_class);
         if (base_class == nullptr) {
-            error_message += std::format("Class {} inheritance of undefined class {}\n", node.name, *node.base_class);
+            error_message += std::format("Class '{}' inherits from undefined class '{}'\n", node.name, *node.base_class);
             return;
         }
     } else {
@@ -33,7 +33,7 @@ void class_collector::visit(ast::class_declaration& node) {
         base_class = program_symbol_table->typed_lookup<structures::class_symbol>("AnyRef");
         node.base_class = "AnyRef";
     }
-    auto sym{std::make_unique<structures::class_symbol>(node.name, program_symbol_table.get(), base_class)};
+    auto sym{std::make_unique<structures::class_symbol>(node.name, base_class->class_scope.get(), base_class)};
     program_symbol_table->add(std::move(sym));
     program_type_table->addClass(node.name, &node);
 }

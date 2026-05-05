@@ -1,0 +1,10 @@
+class Main is
+  method test() : Unit is
+    var temp : Integer(42)
+    return Unit()
+  end
+
+  this() is
+    var i : this.test()
+  end
+end

@@ -1,0 +1,12 @@
+class testVarRead is
+  this() is
+  end
+  var value : Integer(42)
+end
+class Main is
+  this() is
+    var obj : testVarRead()
+    var res : obj.value
+  end
+end
+

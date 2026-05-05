@@ -1,0 +1,9 @@
+class Main is
+  method test() : Integer is
+    return 0
+  end
+
+  this() is
+    var res : this.test()
+  end
+end

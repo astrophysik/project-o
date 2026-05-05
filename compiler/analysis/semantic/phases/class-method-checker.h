@@ -45,7 +45,7 @@ private:
     std::string error_message{};
     structures::symbol_table& program_symbol_table;
     structures::type_table& program_type_table;
-    std::unique_ptr<structures::symbol_table> current_symbol_table = nullptr;
+    structures::symbol_table *current_symbol_table = nullptr;
     structures::class_symbol* current_class_symbol = nullptr;
     const structures::type* method_return_type = nullptr;
     bool definitely_returns = false;

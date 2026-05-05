@@ -84,7 +84,9 @@ void variable_declaration::accept(visitor& v) {
 }
 
 // variable_assignment
-variable_assignment::variable_assignment(variable_declaration* target, std::unique_ptr<expression> value, class_declaration* expr_type)
+variable_assignment::variable_assignment(std::variant<variable_declaration*, parameter_declaration*, field_declaration*> target,
+                                         std::unique_ptr<expression> value,
+                                         class_declaration* expr_type)
     : target(target),
       value(std::move(value)),
       expression_type(expr_type) {}
@@ -94,8 +96,8 @@ void variable_assignment::accept(visitor& v) {
 }
 
 // field_assignment
-field_assignment::field_assignment(member_expression* target, std::unique_ptr<expression> value, class_declaration* expr_type)
-    : target(target),
+field_assignment::field_assignment(std::unique_ptr<member_expression> target, std::unique_ptr<expression> value, class_declaration* expr_type)
+    : target(std::move(target)),
       value(std::move(value)),
       expression_type(expr_type) {}
 field_assignment::~field_assignment() = default;
@@ -155,7 +157,7 @@ void this_expression::accept(visitor& v) {
 }
 
 // identifier_expression
-identifier_expression::identifier_expression(variable_declaration* target)
+identifier_expression::identifier_expression(std::variant<variable_declaration*, parameter_declaration*, field_declaration*> target)
     : target(target) {}
 identifier_expression::~identifier_expression() = default;
 void identifier_expression::accept(visitor& v) {
@@ -163,7 +165,10 @@ void identifier_expression::accept(visitor& v) {
 }
 
 // method_call_expression
-method_call_expression::method_call_expression(std::unique_ptr<expression> obj, method_declaration* method, std::vector<std::unique_ptr<expression>> args, class_declaration* ret_type)
+method_call_expression::method_call_expression(std::unique_ptr<expression> obj,
+                                               method_declaration* method,
+                                               std::vector<std::unique_ptr<expression>> args,
+                                               class_declaration* ret_type)
     : object(std::move(obj)),
       method(method),
       arguments(std::move(args)),

@@ -51,18 +51,19 @@ private:
 
     // Current context
     codegen::ast::class_declaration* current_class = nullptr;
+    bool inside_function_scope = false;
     codegen::ast::method_declaration* current_method = nullptr;
     structures::symbol_table* current_scope = nullptr;
 
     // Mappings from parsing AST to codegen AST
     std::unordered_map<ast::class_declaration*, codegen::ast::class_declaration*> class_map;
-    std::unordered_map<std::string, codegen::ast::variable_declaration*> variable_map;
+    std::unordered_map<std::string, std::variant<codegen::ast::variable_declaration*, codegen::ast::parameter_declaration*, codegen::ast::field_declaration*>>
+        variable_map;
 
     // Intermediate results for transformations
     std::unique_ptr<codegen::ast::expression> last_expression;
     std::unique_ptr<codegen::ast::statement> last_statement;
     std::unique_ptr<codegen::ast::block> last_block;
-    std::unique_ptr<codegen::ast::member_expression> last_member_expr;
 
     // Helper methods
     codegen::ast::class_declaration* resolveType(const std::string& type_name);
@@ -74,7 +75,7 @@ private:
 } // namespace details
 
 inline std::unique_ptr<codegen::ast::program>
-codegen_ast_collect(const std::unique_ptr<ast::program>& program, structures::symbol_table& symbol_table, structures::type_table& type_table) {
+codegen_ast_collect(const std::unique_ptr<ast::program>& program, structures::symbol_table& symbol_table, structures::type_table& type_table) noexcept {
     details::codegen_ast_collector transformer(symbol_table, type_table);
     transformer.result_program = std::make_unique<codegen::ast::program>();
     builtin::add_builtin_classes_to_codegen(*transformer.result_program);
