@@ -6,7 +6,7 @@
 #include <variant>
 #include <vector>
 
-#include "compiler/ast/ast-forward-declarations.h"
+#include "ast-forward-declarations.h"
 
 namespace ast {
 
