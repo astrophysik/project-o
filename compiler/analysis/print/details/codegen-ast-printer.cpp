@@ -150,7 +150,8 @@ void codegen_ast_printer::visit(codegen::ast::constructor_declaration& node) {
 
 void codegen_ast_printer::visit(codegen::ast::variable_assignment& node) {
     std::visit(overloaded{[](codegen::ast::variable_declaration* decl) { std::println("VariableAssignment: target={}", decl->name); },
-                          [](codegen::ast::parameter_declaration* decl) { std::println("VariableAssignment: target={}", decl->name); }},
+                          [](codegen::ast::parameter_declaration* decl) { std::println("VariableAssignment: target={}", decl->name); },
+                          [](codegen::ast::field_declaration* decl) { std::println("VariableAssignment: target={}", decl->name); }},
                node.target);
     indent++;
     print_indent();
@@ -234,7 +235,8 @@ void codegen_ast_printer::visit(codegen::ast::this_expression& node) {
 
 void codegen_ast_printer::visit(codegen::ast::identifier_expression& node) {
     std::visit(overloaded{[](codegen::ast::variable_declaration* decl) { std::println("IdentifierExpression: variable name={}", decl->name); },
-                          [](codegen::ast::parameter_declaration* decl) { std::println("IdentifierExpression: parameter target={}", decl->name); }},
+                          [](codegen::ast::parameter_declaration* decl) { std::println("IdentifierExpression: parameter target={}", decl->name); },
+                          [](codegen::ast::field_declaration* decl) { std::println("IdentifierExpression: field target={}", decl->name); }},
                node.target);
 }
 

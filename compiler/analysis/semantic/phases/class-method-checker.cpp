@@ -153,7 +153,7 @@ void class_method_checker::visit(ast::while_statement& node) {
 void class_method_checker::visit(ast::assignment_statement& node) {
     const auto* target_symbol = current_symbol_table->typed_lookup<structures::variable_symbol>(node.target);
     if (target_symbol == nullptr) {
-        error_message += std::format("{} should be already defined variable\n", node.target);
+        error_message += std::format("unknown field or variable with name {}\n", node.target);
         return;
     }
     const auto* expr_type = structures::type::inferExpressionType(node.value.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});

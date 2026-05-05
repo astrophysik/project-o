@@ -117,12 +117,14 @@ struct variable_declaration : public statement {
 };
 
 struct variable_assignment : public statement {
-    std::variant<variable_declaration*, parameter_declaration*> target;
+    std::variant<variable_declaration*, parameter_declaration*, field_declaration*> target;
     std::unique_ptr<expression> value;
     class_declaration* expression_type;
 
     variable_assignment() = default;
-    explicit variable_assignment(std::variant<variable_declaration*, parameter_declaration*> target, std::unique_ptr<expression> value, class_declaration* expr_type);
+    explicit variable_assignment(std::variant<variable_declaration*, parameter_declaration*, field_declaration*> target,
+                                 std::unique_ptr<expression> value,
+                                 class_declaration* expr_type);
     ~variable_assignment() override;
     void accept(visitor& visitor) override;
 };
@@ -137,7 +139,6 @@ struct field_assignment : public statement {
     ~field_assignment() override;
     void accept(visitor& visitor) override;
 };
-
 
 struct while_statement : public statement {
 public:
@@ -175,7 +176,6 @@ struct return_statement : public statement {
     void accept(visitor& visitor) override;
 };
 
-
 struct literal_expression : public expression {
     class_declaration* type;
     std::variant<int64_t, double, bool> value;
@@ -200,10 +200,10 @@ struct this_expression : public expression {
 };
 
 struct identifier_expression : public expression {
-    std::variant<variable_declaration*, parameter_declaration*> target;
+    std::variant<variable_declaration*, parameter_declaration*, field_declaration*> target;
 
     identifier_expression() = default;
-    explicit identifier_expression(std::variant<variable_declaration*, parameter_declaration*> target);
+    explicit identifier_expression(std::variant<variable_declaration*, parameter_declaration*, field_declaration*> target);
     ~identifier_expression() override;
 
     void accept(visitor& visitor) override;
@@ -216,7 +216,10 @@ struct method_call_expression : public expression {
     class_declaration* return_type;
 
     method_call_expression() = default;
-    explicit method_call_expression(std::unique_ptr<expression> obj, method_declaration* method, std::vector<std::unique_ptr<expression>> args, class_declaration* ret_type);
+    explicit method_call_expression(std::unique_ptr<expression> obj,
+                                    method_declaration* method,
+                                    std::vector<std::unique_ptr<expression>> args,
+                                    class_declaration* ret_type);
     ~method_call_expression() override;
 
     void accept(visitor& visitor) override;
@@ -244,7 +247,6 @@ struct member_expression : public expression {
     void accept(visitor& visitor) override;
 };
 
-
 struct grouping_expression : public expression {
 public:
     std::unique_ptr<expression> inner;
@@ -255,7 +257,6 @@ public:
 
     void accept(visitor& visitor) override;
 };
-
 
 struct block : public entity {
 public:

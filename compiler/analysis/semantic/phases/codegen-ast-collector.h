@@ -57,7 +57,8 @@ private:
 
     // Mappings from parsing AST to codegen AST
     std::unordered_map<ast::class_declaration*, codegen::ast::class_declaration*> class_map;
-    std::unordered_map<std::string, std::variant<codegen::ast::variable_declaration*, codegen::ast::parameter_declaration*>> variable_map;
+    std::unordered_map<std::string, std::variant<codegen::ast::variable_declaration*, codegen::ast::parameter_declaration*, codegen::ast::field_declaration*>>
+        variable_map;
 
     // Intermediate results for transformations
     std::unique_ptr<codegen::ast::expression> last_expression;

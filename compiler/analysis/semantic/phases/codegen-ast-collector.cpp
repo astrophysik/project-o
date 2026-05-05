@@ -109,7 +109,7 @@ void codegen_ast_collector::visit(ast::variable_declaration& node) {
             auto* expr_type = structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, class_sym, current_scope});
             field->type = resolveType(expr_type);
         }
-
+        variable_map[node.name] = field.get();
         current_class->fields.push_back(std::move(field));
     } else {
         auto var = std::make_unique<codegen::ast::variable_declaration>();
