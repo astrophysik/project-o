@@ -51,6 +51,7 @@ private:
 
     // Current context
     codegen::ast::class_declaration* current_class = nullptr;
+    bool inside_function_scope = false;
     codegen::ast::method_declaration* current_method = nullptr;
     structures::symbol_table* current_scope = nullptr;
 
@@ -74,7 +75,7 @@ private:
 } // namespace details
 
 inline std::unique_ptr<codegen::ast::program>
-codegen_ast_collect(const std::unique_ptr<ast::program>& program, structures::symbol_table& symbol_table, structures::type_table& type_table) {
+codegen_ast_collect(const std::unique_ptr<ast::program>& program, structures::symbol_table& symbol_table, structures::type_table& type_table) noexcept {
     details::codegen_ast_collector transformer(symbol_table, type_table);
     transformer.result_program = std::make_unique<codegen::ast::program>();
     builtin::add_builtin_classes_to_codegen(*transformer.result_program);

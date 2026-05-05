@@ -94,7 +94,7 @@ void codegen_ast_collector::visit(ast::class_declaration& node) {
 }
 
 void codegen_ast_collector::visit(ast::variable_declaration& node) {
-    if (current_class && !current_method) {
+    if (current_class && !inside_function_scope) {
         auto field = std::make_unique<codegen::ast::field_declaration>();
         field->name = node.name;
         field->class_owner = current_class;
@@ -160,6 +160,7 @@ void codegen_ast_collector::visit(ast::method_declaration& node) {
         param->accept(*this);
     }
 
+    inside_function_scope = true;
     if (node.body.has_value()) {
         std::visit(
             [&](auto& body) {
@@ -172,6 +173,7 @@ void codegen_ast_collector::visit(ast::method_declaration& node) {
             },
             *node.body);
     }
+    inside_function_scope = false;
 
     current_class->methods.push_back(std::move(method));
     current_method = nullptr;
@@ -191,9 +193,11 @@ void codegen_ast_collector::visit(ast::constructor_declaration& node) {
         ctor->parameters.push_back(std::move(codegen_param));
     }
 
+    inside_function_scope = true;
     if (node.body) {
         ctor->body = transformBlock(node.body.get());
     }
+    inside_function_scope = false;
 
     current_class->constructors.push_back(std::move(ctor));
 }
