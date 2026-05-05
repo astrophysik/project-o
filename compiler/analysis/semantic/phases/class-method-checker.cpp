@@ -44,7 +44,17 @@ void class_method_checker::visit(ast::method_declaration& node) {
         error_message += "methods without return type are forbidden\n";
         return;
     }
-    current_symbol_table = std::make_unique<structures::symbol_table>(current_class_symbol->class_scope.get());
+
+    std::vector<const structures::type *> param_types;
+    for (auto& param : node.parameters) {
+        param_types.push_back(program_type_table.resolveType(param->type_name));
+    }
+
+    std::string mangled = structures::mangle_method_name(node.name, param_types);
+    auto *method_symbol = current_class_symbol->class_scope->typed_lookup<structures::method_symbol>(mangled);
+    assert(method_symbol != nullptr);
+
+    current_symbol_table = method_symbol->method_scope.get();
     for (const auto& param : node.parameters) {
         const auto& param_name = param->name;
         const auto* param_type = program_type_table.resolveType(param->type_name);
@@ -64,7 +74,7 @@ void class_method_checker::visit(ast::method_declaration& node) {
                 return std::nullopt;
             },
             [&](const std::unique_ptr<ast::expression>& body) -> std::optional<std::string> {
-                const auto* type = structures::type::inferExpressionType(body.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
+                const auto* type = structures::type::inferExpressionType(body.get(), {&program_type_table, current_class_symbol, current_symbol_table});
                 if (!structures::type::isSubtype(type, return_type)) {
                     return std::format("expected return type {} but infer type {} from expression\n", return_type->toString(), type->toString());
                 }
@@ -77,7 +87,15 @@ void class_method_checker::visit(ast::method_declaration& node) {
 }
 
 void class_method_checker::visit(ast::constructor_declaration& node) {
-    current_symbol_table = std::make_unique<structures::symbol_table>(current_class_symbol->class_scope.get());
+    std::vector<const structures::type *> param_types;
+    for (auto& param : node.parameters) {
+        param_types.push_back(program_type_table.resolveType(param->type_name));
+    }
+    std::string mangled = structures::mangle_method_name(current_class_symbol->name, param_types);
+    auto *method_symbol = current_class_symbol->class_scope->typed_lookup<structures::method_symbol>(mangled);
+    assert(method_symbol != nullptr);
+
+    current_symbol_table = method_symbol->method_scope.get();
     for (const auto& param : node.parameters) {
         const auto& param_name = param->name;
         const auto* param_type = program_type_table.resolveType(param->type_name);
@@ -96,13 +114,13 @@ void class_method_checker::visit(ast::block& node) {
 
 void class_method_checker::visit(ast::variable_declaration& node) {
     const auto* type_res =
-        structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
+        structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, current_class_symbol, current_symbol_table});
     current_symbol_table->add(std::make_unique<structures::variable_symbol>(node.name, type_res));
 }
 
 void class_method_checker::visit(ast::if_statement& node) {
     const auto* condition_type =
-        structures::type::inferExpressionType(node.condition.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
+        structures::type::inferExpressionType(node.condition.get(), {&program_type_table, current_class_symbol, current_symbol_table});
     if (!structures::type::typesEqual(condition_type, program_type_table.resolveType("Boolean"))) {
         error_message += std::format("expected boolean type for condition expression but infer {}\n", condition_type->toString());
         return;
@@ -134,7 +152,7 @@ void class_method_checker::visit(ast::return_statement& node) {
         return;
     }
 
-    const auto* return_type = structures::type::inferExpressionType(node.value.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
+    const auto* return_type = structures::type::inferExpressionType(node.value.get(), {&program_type_table, current_class_symbol, current_symbol_table});
     if (!structures::type::isSubtype(return_type, method_return_type)) {
         error_message += std::format("expected return type {} but infer type {} from expression\n", method_return_type->toString(), return_type->toString());
     }
@@ -142,7 +160,7 @@ void class_method_checker::visit(ast::return_statement& node) {
 
 void class_method_checker::visit(ast::while_statement& node) {
     const auto* condition_type =
-        structures::type::inferExpressionType(node.condition.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
+        structures::type::inferExpressionType(node.condition.get(), {&program_type_table, current_class_symbol, current_symbol_table});
     if (!structures::type::typesEqual(condition_type, program_type_table.resolveType("Boolean"))) {
         error_message += std::format("expected boolean type for condition expression but infer {}\n", condition_type->toString());
         return;
@@ -156,7 +174,7 @@ void class_method_checker::visit(ast::assignment_statement& node) {
         error_message += std::format("unknown field or variable with name {}\n", node.target);
         return;
     }
-    const auto* expr_type = structures::type::inferExpressionType(node.value.get(), {&program_type_table, current_class_symbol, current_symbol_table.get()});
+    const auto* expr_type = structures::type::inferExpressionType(node.value.get(), {&program_type_table, current_class_symbol, current_symbol_table});
     if (!structures::type::isSubtype(expr_type, target_symbol->type)) {
         error_message += std::format("expected type {} for assignment expression of variable {} but infer {}\n",
                                      target_symbol->type->toString(),

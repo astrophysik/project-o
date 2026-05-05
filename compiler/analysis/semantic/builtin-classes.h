@@ -21,7 +21,8 @@ inline void add_constructor(structures::class_symbol* cls, std::vector<const str
     std::string mangled = structures::mangle_method_name(cls->name, param_types);
     auto ctor =
         std::make_unique<structures::method_symbol>(mangled, cls->name, cls->class_scope.get(), type_table.resolveType(cls->name), std::move(param_types));
-    cls->constructors.push_back(std::move(ctor));
+    cls->constructors.push_back(ctor.get());
+    cls->class_scope->add(std::move(ctor));
 }
 
 inline void add_field(structures::class_symbol* cls, const std::string& name, const structures::type* field_type) {

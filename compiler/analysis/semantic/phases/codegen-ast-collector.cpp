@@ -1,8 +1,9 @@
 #include "compiler/analysis/semantic/phases/codegen-ast-collector.h"
 
+#include <algorithm>
 #include <cassert>
-#include <variant>
 #include <format>
+#include <variant>
 
 #include "compiler/compilation-structures/ast/codegen/ast.h"
 #include "compiler/compilation-structures/ast/parsing/ast.h"
@@ -62,7 +63,7 @@ void codegen_ast_collector::visit(ast::program& node) {
         result_program->classes.push_back(std::move(codegen_cls));
     }
 
-    // Pass 2: Fill in class details
+    // Pass 2: collect declarations
     for (auto& cls : node.classes) {
         current_class = class_map[cls.get()];
         auto* class_sym = program_symbol_table.typed_lookup<structures::class_symbol>(cls->name);
@@ -71,6 +72,12 @@ void codegen_ast_collector::visit(ast::program& node) {
 
         if (cls->base_class.has_value()) {
             current_class->base_class = resolveType(*cls->base_class);
+        }
+
+        for (auto& method : cls->methods) {
+            auto method_decl = std::make_unique<codegen::ast::method_declaration>();
+            method_decl->name = method->name;
+            current_class->methods.push_back(std::move(method_decl));
         }
 
         for (auto& field : cls->fields) {
@@ -90,8 +97,7 @@ void codegen_ast_collector::visit(ast::program& node) {
     current_scope = nullptr;
 }
 
-void codegen_ast_collector::visit(ast::class_declaration& node) {
-}
+void codegen_ast_collector::visit(ast::class_declaration& node) {}
 
 void codegen_ast_collector::visit(ast::variable_declaration& node) {
     if (current_class && !inside_function_scope) {
@@ -124,7 +130,6 @@ void codegen_ast_collector::visit(ast::variable_declaration& node) {
         if (node.initializer) {
             auto* expr_type = structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, class_sym, current_scope});
             var->type = resolveType(expr_type);
-            current_scope->add(std::make_unique<structures::variable_symbol>(var->name, expr_type));
         }
 
         variable_map[node.name] = var.get();
@@ -137,7 +142,6 @@ void codegen_ast_collector::visit(ast::parameter_declaration& node) {
     param->name = node.name;
     param->type = resolveType(node.type_name);
 
-    current_scope->add(std::make_unique<structures::variable_symbol>(node.name, program_type_table.resolveType(node.type_name)));
     variable_map[node.name] = param.get();
 
     if (current_method) {
@@ -146,18 +150,25 @@ void codegen_ast_collector::visit(ast::parameter_declaration& node) {
 }
 
 void codegen_ast_collector::visit(ast::method_declaration& node) {
-    auto method = std::make_unique<codegen::ast::method_declaration>();
+    auto it = std::find_if(current_class->methods.begin(), current_class->methods.end(), [&node](const auto& method) { return method->name == node.name; });
+    assert(it != current_class->methods.end());
+    codegen::ast::method_declaration* method = it->get();
+
+    std::vector<const structures::type *> params;
+    for (auto& param : node.parameters) {
+        params.push_back(program_type_table.resolveType(param->name));
+    }
+    std::string mangled = structures::mangle_method_name(node.name, params);
+    current_scope = current_scope->typed_lookup<structures::method_symbol>(mangled)->method_scope.get();
+    assert(current_scope != nullptr);
+
     method->name = node.name;
     method->class_owner = current_class;
-    current_method = method.get();
+    current_method = method;
 
     if (node.return_type.has_value()) {
         method->return_type = resolveType(*node.return_type);
     }
-
-    auto* class_sym = program_symbol_table.typed_lookup<structures::class_symbol>(current_class->name);
-    assert(class_sym != nullptr);
-    current_scope = class_sym ? class_sym->class_scope.get() : nullptr;
 
     for (auto& param : node.parameters) {
         param->accept(*this);
@@ -178,23 +189,26 @@ void codegen_ast_collector::visit(ast::method_declaration& node) {
     }
     inside_function_scope = false;
 
-    current_class->methods.push_back(std::move(method));
     current_method = nullptr;
 }
 
 void codegen_ast_collector::visit(ast::constructor_declaration& node) {
+    std::vector<const structures::type *> params;
+    for (auto& param : node.parameters) {
+        params.push_back(program_type_table.resolveType(param->name));
+    }
+    std::string mangled = structures::mangle_method_name(current_class->name, params);
+    current_scope = current_scope->typed_lookup<structures::method_symbol>(mangled)->method_scope.get();
+    assert(current_scope != nullptr);
+
     auto ctor = std::make_unique<codegen::ast::constructor_declaration>();
     ctor->class_owner = current_class;
-
-    auto* class_sym = program_symbol_table.typed_lookup<structures::class_symbol>(current_class->name);
-    current_scope = class_sym ? class_sym->class_scope.get() : nullptr;
 
     for (auto& param : node.parameters) {
         auto codegen_param = std::make_unique<codegen::ast::parameter_declaration>();
         codegen_param->name = param->name;
         codegen_param->type = resolveType(param->type_name);
         ctor->parameters.push_back(std::move(codegen_param));
-
     }
 
     inside_function_scope = true;
@@ -222,7 +236,7 @@ void codegen_ast_collector::visit(ast::assignment_statement& node) {
         auto this_expr = std::make_unique<codegen::ast::this_expression>(current_class);
         auto member = std::make_unique<codegen::ast::member_expression>();
 
-        auto * field_owner_class = current_class;
+        auto* field_owner_class = current_class;
         while (field_owner_class != nullptr) {
             for (auto& f : field_owner_class->fields) {
                 if (f->name == node.target) {
@@ -395,7 +409,8 @@ void codegen_ast_collector::visit(ast::call_expression& node) {
         if (target_class_sym) {
             for (size_t i = 0; i < target_class_sym->constructors.size(); ++i) {
                 auto& ctor = target_class_sym->constructors[i];
-                if (ctor->parameter_types.size() != arg_types.size()) continue;
+                if (ctor->parameter_types.size() != arg_types.size())
+                    continue;
 
                 bool matches = true;
                 for (size_t j = 0; j < arg_types.size(); ++j) {
@@ -444,8 +459,10 @@ void codegen_ast_collector::visit(ast::call_expression& node) {
                     while (current != nullptr) {
                         for (size_t i = 0; i < current->methods.size(); ++i) {
                             auto* method = current->methods[i];
-                            if (method->original_name != member_expr->member) continue;
-                            if (method->parameter_types.size() != arg_types.size()) continue;
+                            if (method->original_name != member_expr->member)
+                                continue;
+                            if (method->parameter_types.size() != arg_types.size())
+                                continue;
 
                             bool matches = true;
                             for (size_t j = 0; j < arg_types.size(); ++j) {

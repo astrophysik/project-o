@@ -88,7 +88,7 @@ void resolve_constructor_call(structures::class_symbol* target_class, const std:
                 throw std::runtime_error{
                     std::format("Ambiguous constructor call for class '{}': multiple overloads match the argument types\n", target_class->name)};
             }
-            matching_constructor = ctor.get();
+            matching_constructor = ctor;
         }
     }
 
