@@ -2,10 +2,12 @@ set(COMPILER_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 set(COMPILER_ANALYSIS
         ${COMPILER_DIR}/analysis/print/details/ast-printer.cpp
+        ${COMPILER_DIR}/analysis/print/details/codegen-ast-printer.cpp
         ${COMPILER_DIR}/analysis/semantic/phases/class-collector.cpp
         ${COMPILER_DIR}/analysis/semantic/phases/class-body-collector.cpp
         ${COMPILER_DIR}/analysis/semantic/phases/class-field-checker.cpp
         ${COMPILER_DIR}/analysis/semantic/phases/class-method-checker.cpp
+        ${COMPILER_DIR}/analysis/semantic/phases/codegen-ast-collector.cpp
 )
 
 set(COMPILER_MAIN
@@ -15,6 +17,7 @@ set(COMPILER_MAIN
 set(COMPILER_COMPILATION_STRUCTURES
         ${COMPILER_DIR}/compilation-structures/type-table.cpp
         ${COMPILER_DIR}/compilation-structures/ast/parsing/ast.cpp
+        ${COMPILER_DIR}/compilation-structures/ast/codegen/ast.cpp
 )
 
 set(COMPILER_PARSER

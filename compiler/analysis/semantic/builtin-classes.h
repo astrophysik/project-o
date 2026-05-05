@@ -1,5 +1,6 @@
 #pragma once
 
+#include "compiler/compilation-structures/ast/codegen/ast.h"
 #include "compiler/compilation-structures/symbol-table.h"
 #include "compiler/compilation-structures/type-table.h"
 
@@ -18,7 +19,8 @@ inline void add_method(structures::class_symbol* cls,
 
 inline void add_constructor(structures::class_symbol* cls, std::vector<const structures::type*> param_types, structures::type_table& type_table) {
     std::string mangled = structures::mangle_method_name(cls->name, param_types);
-    auto ctor = std::make_unique<structures::method_symbol>(mangled, cls->name, cls->class_scope.get(), type_table.resolveType(cls->name), std::move(param_types));
+    auto ctor =
+        std::make_unique<structures::method_symbol>(mangled, cls->name, cls->class_scope.get(), type_table.resolveType(cls->name), std::move(param_types));
     cls->constructors.push_back(std::move(ctor));
 }
 
@@ -130,6 +132,152 @@ inline void add_builtin_classes(structures::symbol_table& sym_table, structures:
     add_method(boolean_ptr, "Not", type_table.resolveType("Boolean"), {}, type_table);
 
     add_constructor(unit_ptr, {}, type_table);
+}
+
+inline void add_codegen_field(codegen::ast::class_declaration* cls, const std::string& name, codegen::ast::class_declaration* field_type) {
+    auto field = std::make_unique<codegen::ast::field_declaration>();
+    field->name = name;
+    field->type = field_type;
+    field->class_owner = cls;
+    cls->fields.push_back(std::move(field));
+}
+
+inline void add_codegen_method(codegen::ast::class_declaration* cls,
+                               const std::string& name,
+                               codegen::ast::class_declaration* return_type,
+                               std::vector<std::pair<std::string, codegen::ast::class_declaration*>> params) {
+    auto method = std::make_unique<codegen::ast::method_declaration>();
+    method->name = name;
+    method->return_type = return_type;
+    method->class_owner = cls;
+
+    for (auto& [param_name, param_type] : params) {
+        auto param = std::make_unique<codegen::ast::parameter_declaration>();
+        param->name = param_name;
+        param->type = param_type;
+        method->parameters.push_back(std::move(param));
+    }
+
+    cls->methods.push_back(std::move(method));
+}
+
+inline void add_codegen_constructor(codegen::ast::class_declaration* cls, std::vector<std::pair<std::string, codegen::ast::class_declaration*>> params) {
+    auto ctor = std::make_unique<codegen::ast::constructor_declaration>();
+    ctor->class_owner = cls;
+
+    for (auto& [param_name, param_type] : params) {
+        auto param = std::make_unique<codegen::ast::parameter_declaration>();
+        param->name = param_name;
+        param->type = param_type;
+        ctor->parameters.push_back(std::move(param));
+    }
+
+    ctor->body = std::make_unique<codegen::ast::block>();
+
+    cls->constructors.push_back(std::move(ctor));
+}
+
+inline void add_builtin_classes_to_codegen(codegen::ast::program& program) {
+    auto create_builtin_class = [](const std::string& name, codegen::ast::class_declaration* base = nullptr) {
+        auto cls = std::make_unique<codegen::ast::class_declaration>();
+        cls->name = name;
+        cls->base_class = base;
+        return cls;
+    };
+
+    auto class_cls = create_builtin_class("Class");
+    auto* class_ptr = class_cls.get();
+    program.internal_classes.push_back(std::move(class_cls));
+
+    auto anyvalue_cls = create_builtin_class("AnyValue", class_ptr);
+    auto* anyvalue_ptr = anyvalue_cls.get();
+    program.internal_classes.push_back(std::move(anyvalue_cls));
+
+    auto anyref_cls = create_builtin_class("AnyRef", class_ptr);
+    program.internal_classes.push_back(std::move(anyref_cls));
+
+    auto integer_cls = create_builtin_class("Integer", anyvalue_ptr);
+    auto* integer_ptr = integer_cls.get();
+    program.internal_classes.push_back(std::move(integer_cls));
+
+    auto real_cls = create_builtin_class("Real", anyvalue_ptr);
+    auto* real_ptr = real_cls.get();
+    program.internal_classes.push_back(std::move(real_cls));
+
+    auto boolean_cls = create_builtin_class("Boolean", anyvalue_ptr);
+    auto* boolean_ptr = boolean_cls.get();
+    program.internal_classes.push_back(std::move(boolean_cls));
+
+    auto unit_cls = create_builtin_class("Unit", anyvalue_ptr);
+    auto* unit_ptr = unit_cls.get();
+    program.internal_classes.push_back(std::move(unit_cls));
+
+    // Add Inreger members
+    add_codegen_constructor(integer_ptr, {{"p", integer_ptr}});
+    add_codegen_constructor(integer_ptr, {{"p", real_ptr}});
+    add_codegen_field(integer_ptr, "Min", integer_ptr);
+    add_codegen_field(integer_ptr, "Max", integer_ptr);
+    add_codegen_method(integer_ptr, "toReal", real_ptr, {});
+    add_codegen_method(integer_ptr, "toBoolean", boolean_ptr, {});
+    add_codegen_method(integer_ptr, "UnaryMinus", integer_ptr, {});
+    add_codegen_method(integer_ptr, "Plus", integer_ptr, {{"p", integer_ptr}});
+    add_codegen_method(integer_ptr, "Plus", real_ptr, {{"p", real_ptr}});
+    add_codegen_method(integer_ptr, "Minus", integer_ptr, {{"p", integer_ptr}});
+    add_codegen_method(integer_ptr, "Minus", real_ptr, {{"p", real_ptr}});
+    add_codegen_method(integer_ptr, "Mult", integer_ptr, {{"p", integer_ptr}});
+    add_codegen_method(integer_ptr, "Mult", real_ptr, {{"p", real_ptr}});
+    add_codegen_method(integer_ptr, "Div", integer_ptr, {{"p", integer_ptr}});
+    add_codegen_method(integer_ptr, "Div", real_ptr, {{"p", real_ptr}});
+    add_codegen_method(integer_ptr, "Rem", integer_ptr, {{"p", integer_ptr}});
+    add_codegen_method(integer_ptr, "Less", boolean_ptr, {{"p", integer_ptr}});
+    add_codegen_method(integer_ptr, "Less", boolean_ptr, {{"p", real_ptr}});
+    add_codegen_method(integer_ptr, "LessEqual", boolean_ptr, {{"p", integer_ptr}});
+    add_codegen_method(integer_ptr, "LessEqual", boolean_ptr, {{"p", real_ptr}});
+    add_codegen_method(integer_ptr, "Greater", boolean_ptr, {{"p", integer_ptr}});
+    add_codegen_method(integer_ptr, "Greater", boolean_ptr, {{"p", real_ptr}});
+    add_codegen_method(integer_ptr, "GreaterEqual", boolean_ptr, {{"p", integer_ptr}});
+    add_codegen_method(integer_ptr, "GreaterEqual", boolean_ptr, {{"p", real_ptr}});
+    add_codegen_method(integer_ptr, "Equal", boolean_ptr, {{"p", integer_ptr}});
+    add_codegen_method(integer_ptr, "Equal", boolean_ptr, {{"p", real_ptr}});
+
+    // Add Real members
+    add_codegen_constructor(real_ptr, {{"p", real_ptr}});
+    add_codegen_constructor(real_ptr, {{"p", integer_ptr}});
+    add_codegen_field(real_ptr, "Min", real_ptr);
+    add_codegen_field(real_ptr, "Max", real_ptr);
+    add_codegen_field(real_ptr, "Epsilon", real_ptr);
+    add_codegen_method(real_ptr, "toInteger", integer_ptr, {});
+    add_codegen_method(real_ptr, "UnaryMinus", real_ptr, {});
+    add_codegen_method(real_ptr, "Plus", real_ptr, {{"p", real_ptr}});
+    add_codegen_method(real_ptr, "Plus", real_ptr, {{"p", integer_ptr}});
+    add_codegen_method(real_ptr, "Minus", real_ptr, {{"p", real_ptr}});
+    add_codegen_method(real_ptr, "Minus", real_ptr, {{"p", integer_ptr}});
+    add_codegen_method(real_ptr, "Mult", real_ptr, {{"p", real_ptr}});
+    add_codegen_method(real_ptr, "Mult", real_ptr, {{"p", integer_ptr}});
+    add_codegen_method(real_ptr, "Div", real_ptr, {{"p", real_ptr}});
+    add_codegen_method(real_ptr, "Div", real_ptr, {{"p", integer_ptr}});
+    add_codegen_method(real_ptr, "Rem", real_ptr, {{"p", integer_ptr}});
+    add_codegen_method(real_ptr, "Less", boolean_ptr, {{"p", real_ptr}});
+    add_codegen_method(real_ptr, "Less", boolean_ptr, {{"p", integer_ptr}});
+    add_codegen_method(real_ptr, "LessEqual", boolean_ptr, {{"p", real_ptr}});
+    add_codegen_method(real_ptr, "LessEqual", boolean_ptr, {{"p", integer_ptr}});
+    add_codegen_method(real_ptr, "Greater", boolean_ptr, {{"p", real_ptr}});
+    add_codegen_method(real_ptr, "Greater", boolean_ptr, {{"p", integer_ptr}});
+    add_codegen_method(real_ptr, "GreaterEqual", boolean_ptr, {{"p", real_ptr}});
+    add_codegen_method(real_ptr, "GreaterEqual", boolean_ptr, {{"p", integer_ptr}});
+    add_codegen_method(real_ptr, "Equal", boolean_ptr, {{"p", real_ptr}});
+    add_codegen_method(real_ptr, "Equal", boolean_ptr, {{"p", integer_ptr}});
+
+    // Add Boolean members
+    add_codegen_constructor(boolean_ptr, {{"p", boolean_ptr}});
+    add_codegen_method(boolean_ptr, "toInteger", integer_ptr, {});
+    add_codegen_method(boolean_ptr, "Or", boolean_ptr, {{"p", boolean_ptr}});
+    add_codegen_method(boolean_ptr, "And", boolean_ptr, {{"p", boolean_ptr}});
+    add_codegen_method(boolean_ptr, "Xor", boolean_ptr, {{"p", boolean_ptr}});
+    add_codegen_method(boolean_ptr, "Not", boolean_ptr, {});
+
+    // Add Unit constructor
+    add_codegen_constructor(unit_ptr, {});
 }
 
 } // namespace analysis::semantic::builtin

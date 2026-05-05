@@ -1,6 +1,5 @@
 #include "compiler/analysis/semantic/phases/class-method-checker.h"
 
-#include "type-checker.h"
 
 #include <cassert>
 #include <expected>
@@ -175,7 +174,7 @@ void class_method_checker::visit(ast::assignment_statement& node) {
 }
 
 void class_method_checker::visit(ast::call_expression& node) {
-    error_message += "call expression without discard result are forbidden\n";
+    error_message += "call expression with discard result are forbidden\n";
 }
 
 void class_method_checker::visit(ast::parameter_declaration& node) {}

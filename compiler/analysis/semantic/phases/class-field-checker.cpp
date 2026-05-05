@@ -1,6 +1,5 @@
 #include "class-field-checker.h"
 
-#include "type-checker.h"
 
 #include <cassert>
 #include <format>

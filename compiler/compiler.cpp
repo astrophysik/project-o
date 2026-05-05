@@ -6,6 +6,7 @@
 #include "compiler/lexer/lexer.h"
 #include "compiler/parser/parser.h"
 #include "compiler/analysis/semantic/semantic-check.h"
+#include "compiler/analysis/print/codegen-ast-print.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -19,8 +20,9 @@ int main(int argc, char* argv[]) {
     try {
         auto tokens_res = lexer::tokenize_text(file_content);
         auto parser = parser::parser(tokens_res);
-        auto ast = parser.parse();
-        analysis::semantic::check_program(ast);
+        auto parsing_ast = parser.parse();
+        auto semantic_ast = analysis::semantic::check_program(parsing_ast);
+        analysis::print_codegen_ast(semantic_ast);
     } catch (std::exception& e) {
         std::cerr << "Compilation error : \n" << e.what();
     }
