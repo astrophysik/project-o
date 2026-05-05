@@ -138,6 +138,9 @@ const structures::type* infer_call_expression(const ast::call_expression* call_e
         if (auto* obj_ident = dynamic_cast<ast::identifier_expression*>(member_expr->object.get()); obj_ident && obj_ident->name == member_expr->member) {
             // Constructor call: ClassName(args)
             auto* target_class = context.symbol_table->typed_lookup<structures::class_symbol>(obj_ident->name);
+            if (target_class == nullptr) {
+                throw std::runtime_error{std::format("Unknown type for construction call {}\n", obj_ident->name)};
+            }
             assert(target_class != nullptr);
             resolve_constructor_call(target_class, argument_types);
             return context.type_table->resolveType(target_class->name);
