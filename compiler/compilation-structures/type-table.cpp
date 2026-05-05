@@ -12,7 +12,7 @@ namespace {
 std::string format_argument_types(const std::vector<const structures::type*>& types) {
     std::string result = "(";
     for (size_t i = 0; i < types.size(); ++i) {
-        if (i != types.size() - 1) {
+        if (i > 0) {
             result += ", ";
         }
         result += types[i]->toString();
