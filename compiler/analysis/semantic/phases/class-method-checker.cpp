@@ -24,14 +24,14 @@ void class_method_checker::visit(ast::class_declaration& node) {
         try {
             method->accept(*this);
         } catch (const std::exception& e) {
-            error_message += std::format("semantic error on checking method {} : {}", method->name, e.what());
+            error_message += std::format("Semantic error checking method '{}': {}\n", method->name, e.what());
         }
     }
     for (const auto& constructor : node.constructors) {
         try {
             constructor->accept(*this);
         } catch (const std::exception& e) {
-            error_message += std::format("semantic error on checking constructor {} : {}", cls->name, e.what());
+            error_message += std::format("Semantic error checking constructor '{}': {}\n", cls->name, e.what());
         }
     }
 }
@@ -41,7 +41,7 @@ void class_method_checker::visit(ast::method_declaration& node) {
         return;
     }
     if (!node.return_type.has_value()) {
-        error_message += "methods without return type are forbidden\n";
+        error_message += "Methods without return type are forbidden\n";
         return;
     }
 
@@ -69,14 +69,14 @@ void class_method_checker::visit(ast::method_declaration& node) {
                 method_return_type = return_type;
                 body->accept(*this);
                 if (!std::exchange(definitely_returns, false)) {
-                    return std::format("method {} does not return on all code paths\n", node.name);
+                    return std::format("Method '{}' does not return on all code paths\n", node.name);
                 }
                 return std::nullopt;
             },
             [&](const std::unique_ptr<ast::expression>& body) -> std::optional<std::string> {
                 const auto* type = structures::type::inferExpressionType(body.get(), {&program_type_table, current_class_symbol, current_symbol_table});
                 if (!structures::type::isSubtype(type, return_type)) {
-                    return std::format("expected return type {} but infer type {} from expression\n", return_type->toString(), type->toString());
+                    return std::format("Expected return type '{}' but inferred type '{}' from expression\n", return_type->toString(), type->toString());
                 }
                 return std::nullopt;
             }},
@@ -115,9 +115,9 @@ void class_method_checker::visit(ast::block& node) {
 void class_method_checker::visit(ast::variable_declaration& node) {
     const auto* type_res =
         structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, current_class_symbol, current_symbol_table});
-    if (current_symbol_table->typed_lookup<structures::variable_symbol>(node.name) != nullptr) {
-        throw std::runtime_error{std::format("variable {} is already defined", node.name)};
-    }
+//    if (current_symbol_table->typed_lookup<structures::variable_symbol>(node.name) != nullptr) {
+//        throw std::runtime_error{std::format("variable {} is already defined", node.name)};
+//    }
     current_symbol_table->add(std::make_unique<structures::variable_symbol>(node.name, type_res));
 }
 
@@ -125,7 +125,7 @@ void class_method_checker::visit(ast::if_statement& node) {
     const auto* condition_type =
         structures::type::inferExpressionType(node.condition.get(), {&program_type_table, current_class_symbol, current_symbol_table});
     if (!structures::type::typesEqual(condition_type, program_type_table.resolveType("Boolean"))) {
-        error_message += std::format("expected boolean type for condition expression but infer {}\n", condition_type->toString());
+        error_message += std::format("Expected 'Boolean' type for condition expression but inferred '{}'\n", condition_type->toString());
         return;
     }
     node.true_branch->accept(*this);
@@ -144,20 +144,20 @@ void class_method_checker::visit(ast::return_statement& node) {
     definitely_returns = true;
     if (method_return_type == nullptr) {
         if (node.value != nullptr) {
-            error_message += std::format("constructors cannot return value\n");
+            error_message += "Constructors cannot return a value\n";
         }
         // this is return in constructor definition, so just return
         return;
     }
 
     if (node.value == nullptr) {
-        error_message += std::format("method must return a value of type {}\n", method_return_type->toString());
+        error_message += std::format("Method must return a value of type '{}'\n", method_return_type->toString());
         return;
     }
 
     const auto* return_type = structures::type::inferExpressionType(node.value.get(), {&program_type_table, current_class_symbol, current_symbol_table});
     if (!structures::type::isSubtype(return_type, method_return_type)) {
-        error_message += std::format("expected return type {} but infer type {} from expression\n", method_return_type->toString(), return_type->toString());
+        error_message += std::format("Expected return type '{}' but inferred type '{}' from expression\n", method_return_type->toString(), return_type->toString());
     }
 }
 
@@ -165,7 +165,7 @@ void class_method_checker::visit(ast::while_statement& node) {
     const auto* condition_type =
         structures::type::inferExpressionType(node.condition.get(), {&program_type_table, current_class_symbol, current_symbol_table});
     if (!structures::type::typesEqual(condition_type, program_type_table.resolveType("Boolean"))) {
-        error_message += std::format("expected boolean type for condition expression but infer {}\n", condition_type->toString());
+        error_message += std::format("Expected 'Boolean' type for condition expression but inferred '{}'\n", condition_type->toString());
         return;
     }
     node.body->accept(*this);
@@ -174,12 +174,12 @@ void class_method_checker::visit(ast::while_statement& node) {
 void class_method_checker::visit(ast::assignment_statement& node) {
     const auto* target_symbol = current_symbol_table->typed_lookup<structures::variable_symbol>(node.target);
     if (target_symbol == nullptr) {
-        error_message += std::format("unknown field or variable with name {}\n", node.target);
+        error_message += std::format("Unknown field or variable '{}'\n", node.target);
         return;
     }
     const auto* expr_type = structures::type::inferExpressionType(node.value.get(), {&program_type_table, current_class_symbol, current_symbol_table});
     if (!structures::type::isSubtype(expr_type, target_symbol->type)) {
-        error_message += std::format("expected type {} for assignment expression of variable {} but infer {}\n",
+        error_message += std::format("Expected type '{}' for assignment to variable '{}' but inferred '{}'\n",
                                      target_symbol->type->toString(),
                                      target_symbol->name,
                                      expr_type->toString());
@@ -188,7 +188,7 @@ void class_method_checker::visit(ast::assignment_statement& node) {
 }
 
 void class_method_checker::visit(ast::call_expression& node) {
-    error_message += "call expression with discard result are forbidden\n";
+    error_message += "Call expression with discarded result are forbidden\n";
 }
 
 void class_method_checker::visit(ast::parameter_declaration& node) {}

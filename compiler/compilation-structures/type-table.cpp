@@ -131,7 +131,7 @@ const structures::type* infer_call_expression(const ast::call_expression* call_e
             resolve_constructor_call(target_class, argument_types);
             return context.type_table->resolveType(target_class->name);
         }
-        throw std::runtime_error{std::format("undefined constructor or function: {}\n", ident_expr->name)};
+        throw std::runtime_error{std::format("Undefined constructor or function '{}'\n", ident_expr->name)};
     }
 
     if (auto* member_expr = dynamic_cast<ast::member_expression*>(call_expr->callee.get())) {
@@ -139,7 +139,7 @@ const structures::type* infer_call_expression(const ast::call_expression* call_e
             // Constructor call: ClassName(args)
             auto* target_class = context.symbol_table->typed_lookup<structures::class_symbol>(obj_ident->name);
             if (target_class == nullptr) {
-                throw std::runtime_error{std::format("Unknown type for construction call {}\n", obj_ident->name)};
+                throw std::runtime_error{std::format("Unknown type '{}' for constructor call\n", obj_ident->name)};
             }
             assert(target_class != nullptr);
             resolve_constructor_call(target_class, argument_types);
@@ -150,7 +150,7 @@ const structures::type* infer_call_expression(const ast::call_expression* call_e
 
         const auto* class_type = dynamic_cast<const structures::class_type*>(object_type);
         if (class_type == nullptr) {
-            throw std::runtime_error{"cannot call method on non-class type\n"};
+            throw std::runtime_error{"Cannot call method on non-class type\n"};
         }
 
         auto* object_class = context.symbol_table->typed_lookup<structures::class_symbol>(class_type->name);
@@ -175,7 +175,7 @@ const structures::type* infer_call_expression(const ast::call_expression* call_e
         return context.type_table->resolveType("Unit");
     }
 
-    throw std::runtime_error{"unsupported call expression type\n"};
+    throw std::runtime_error{"Unsupported call expression type\n"};
 }
 
 const structures::type* infer_expression(const ast::expression* expression, structures::type::infer_context context) {
@@ -188,7 +188,7 @@ const structures::type* infer_expression(const ast::expression* expression, stru
         case ast::literal_expression::type::boolean:
             return context.type_table->resolveType("Boolean");
         default:
-            throw std::runtime_error{"unknown literal type\n"};
+            throw std::runtime_error{"Unknown literal type\n"};
         }
     }
 
@@ -204,7 +204,7 @@ const structures::type* infer_expression(const ast::expression* expression, stru
             throw std::runtime_error{std::format("{} is class name and can't be used in expression\n", ident->name)};
             ;
         }
-        throw std::runtime_error{std::format("undefined variable symbol {}\n", ident->name)};
+        throw std::runtime_error{std::format("Undefined variable '{}'\n", ident->name)};
     }
 
     if (auto* member = dynamic_cast<const ast::member_expression*>(expression)) {
@@ -214,11 +214,11 @@ const structures::type* infer_expression(const ast::expression* expression, stru
             assert(cls != nullptr);
             auto* field = find_field_in_hierarchy(cls, member->member);
             if (field == nullptr) {
-                throw std::runtime_error{std::format("cannot find field {} in class {}\n", member->member, cls_type->name)};
+                throw std::runtime_error{std::format("Cannot find field '{}' in class '{}'\n", member->member, cls_type->name)};
             }
             return field->type;
         }
-        throw std::runtime_error{"accessing to fields on internal types unsupported\n"};
+        throw std::runtime_error{"Accessing fields on non-class types is not supported\n"};
     }
 
     if (auto* call = dynamic_cast<const ast::call_expression*>(expression)) {
@@ -229,7 +229,7 @@ const structures::type* infer_expression(const ast::expression* expression, stru
         return infer_expression(group->inner.get(), context);
     }
 
-    throw std::runtime_error{"unsupported expression kind for type infer"};
+    throw std::runtime_error{"Unsupported expression type for type inference\n"};
 }
 
 } // namespace
@@ -297,7 +297,7 @@ const type* type_table::resolveType(const std::string& name) const {
         return it->second;
     }
 
-    throw std::runtime_error{std::format("unknown type {}\n", name)};
+    throw std::runtime_error{std::format("Unknown type '{}'\n", name)};
 }
 
 bool type_table::isPrimitiveTypeName(const std::string& name) {
