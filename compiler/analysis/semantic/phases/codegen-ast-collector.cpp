@@ -218,14 +218,20 @@ void codegen_ast_collector::visit(ast::assignment_statement& node) {
         auto this_expr = std::make_unique<codegen::ast::this_expression>(current_class);
         auto member = std::make_unique<codegen::ast::member_expression>();
 
-        for (auto& f : current_class->fields) {
-            if (f->name == node.target) {
-                member->member = f.get();
-                break;
+        auto * field_owner_class = current_class;
+        while (field_owner_class != nullptr) {
+            for (auto& f : field_owner_class->fields) {
+                if (f->name == node.target) {
+                    member->member = f.get();
+                    break;
+                }
             }
+            field_owner_class = field_owner_class->base_class;
         }
+        assert(member->member != nullptr);
+
         member->object = std::move(this_expr);
-        field_assign->target = member.get();
+        field_assign->target = std::move(member);
 
         if (node.value) {
             field_assign->value = transformExpression(node.value.get());
@@ -234,7 +240,6 @@ void codegen_ast_collector::visit(ast::assignment_statement& node) {
             field_assign->expression_type = resolveType(expr_type);
         }
 
-        last_member_expr = std::move(member);
         last_statement = std::move(field_assign);
     } else {
         auto var_assign = std::make_unique<codegen::ast::variable_assignment>();

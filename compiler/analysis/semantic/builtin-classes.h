@@ -36,31 +36,31 @@ inline void add_builtin_classes(structures::symbol_table& sym_table, structures:
     auto* class_ptr = class_sym.get();
     sym_table.add(std::move(class_sym));
 
-    auto anyvalue_sym = std::make_unique<structures::class_symbol>("AnyValue", &sym_table, class_ptr);
+    auto anyvalue_sym = std::make_unique<structures::class_symbol>("AnyValue", class_ptr->class_scope.get(), class_ptr);
     type_table.addClass("AnyValue", nullptr);
     auto* anyvalue_ptr = anyvalue_sym.get();
     sym_table.add(std::move(anyvalue_sym));
 
-    auto anyref_sym = std::make_unique<structures::class_symbol>("AnyRef", &sym_table, class_ptr);
+    auto anyref_sym = std::make_unique<structures::class_symbol>("AnyRef", class_ptr->class_scope.get(), class_ptr);
     type_table.addClass("AnyRef", nullptr);
     sym_table.add(std::move(anyref_sym));
 
-    auto integer_sym = std::make_unique<structures::class_symbol>("Integer", &sym_table, anyvalue_ptr);
+    auto integer_sym = std::make_unique<structures::class_symbol>("Integer", anyvalue_ptr->class_scope.get(), anyvalue_ptr);
     type_table.addClass("Integer", nullptr);
     auto* integer_ptr = integer_sym.get();
     sym_table.add(std::move(integer_sym));
 
-    auto real_sym = std::make_unique<structures::class_symbol>("Real", &sym_table, anyvalue_ptr);
+    auto real_sym = std::make_unique<structures::class_symbol>("Real", anyvalue_ptr->class_scope.get(), anyvalue_ptr);
     type_table.addClass("Real", nullptr);
     auto* real_ptr = real_sym.get();
     sym_table.add(std::move(real_sym));
 
-    auto boolean_sym = std::make_unique<structures::class_symbol>("Boolean", &sym_table, anyvalue_ptr);
+    auto boolean_sym = std::make_unique<structures::class_symbol>("Boolean", anyvalue_ptr->class_scope.get(), anyvalue_ptr);
     type_table.addClass("Boolean", nullptr);
     auto* boolean_ptr = boolean_sym.get();
     sym_table.add(std::move(boolean_sym));
 
-    auto unit_sym = std::make_unique<structures::class_symbol>("Unit", &sym_table, anyvalue_ptr);
+    auto unit_sym = std::make_unique<structures::class_symbol>("Unit", anyvalue_ptr->class_scope.get(), anyvalue_ptr);
     type_table.addClass("Unit", nullptr);
     auto* unit_ptr = unit_sym.get();
     sym_table.add(std::move(unit_sym));

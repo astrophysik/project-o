@@ -128,12 +128,12 @@ struct variable_assignment : public statement {
 };
 
 struct field_assignment : public statement {
-    member_expression* target;
+    std::unique_ptr<member_expression> target;
     std::unique_ptr<expression> value;
     class_declaration* expression_type;
 
     field_assignment() = default;
-    explicit field_assignment(member_expression* target, std::unique_ptr<expression> value, class_declaration* expr_type);
+    explicit field_assignment(std::unique_ptr<member_expression> target, std::unique_ptr<expression> value, class_declaration* expr_type);
     ~field_assignment() override;
     void accept(visitor& visitor) override;
 };

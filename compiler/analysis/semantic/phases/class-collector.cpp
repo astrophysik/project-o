@@ -33,7 +33,7 @@ void class_collector::visit(ast::class_declaration& node) {
         base_class = program_symbol_table->typed_lookup<structures::class_symbol>("AnyRef");
         node.base_class = "AnyRef";
     }
-    auto sym{std::make_unique<structures::class_symbol>(node.name, program_symbol_table.get(), base_class)};
+    auto sym{std::make_unique<structures::class_symbol>(node.name, base_class->class_scope.get(), base_class)};
     program_symbol_table->add(std::move(sym));
     program_type_table->addClass(node.name, &node);
 }

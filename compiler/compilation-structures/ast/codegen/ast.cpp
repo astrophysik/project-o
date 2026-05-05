@@ -94,8 +94,8 @@ void variable_assignment::accept(visitor& v) {
 }
 
 // field_assignment
-field_assignment::field_assignment(member_expression* target, std::unique_ptr<expression> value, class_declaration* expr_type)
-    : target(target),
+field_assignment::field_assignment(std::unique_ptr<member_expression> target, std::unique_ptr<expression> value, class_declaration* expr_type)
+    : target(std::move(target)),
       value(std::move(value)),
       expression_type(expr_type) {}
 field_assignment::~field_assignment() = default;

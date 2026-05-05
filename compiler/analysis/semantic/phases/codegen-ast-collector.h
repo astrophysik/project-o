@@ -63,7 +63,6 @@ private:
     std::unique_ptr<codegen::ast::expression> last_expression;
     std::unique_ptr<codegen::ast::statement> last_statement;
     std::unique_ptr<codegen::ast::block> last_block;
-    std::unique_ptr<codegen::ast::member_expression> last_member_expr;
 
     // Helper methods
     codegen::ast::class_declaration* resolveType(const std::string& type_name);
