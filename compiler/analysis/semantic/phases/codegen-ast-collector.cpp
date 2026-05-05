@@ -137,6 +137,9 @@ void codegen_ast_collector::visit(ast::parameter_declaration& node) {
     param->name = node.name;
     param->type = resolveType(node.type_name);
 
+    current_scope->add(std::make_unique<structures::variable_symbol>(node.name, program_type_table.resolveType(node.type_name)));
+    variable_map[node.name] = param.get();
+
     if (current_method) {
         current_method->parameters.push_back(std::move(param));
     }
@@ -191,6 +194,7 @@ void codegen_ast_collector::visit(ast::constructor_declaration& node) {
         codegen_param->name = param->name;
         codegen_param->type = resolveType(param->type_name);
         ctor->parameters.push_back(std::move(codegen_param));
+
     }
 
     inside_function_scope = true;
@@ -322,8 +326,7 @@ void codegen_ast_collector::visit(ast::this_expression& node) {
 }
 
 void codegen_ast_collector::visit(ast::identifier_expression& node) {
-    codegen::ast::variable_declaration* target = variable_map[node.name];
-    last_expression = std::make_unique<codegen::ast::identifier_expression>(target);
+    last_expression = std::make_unique<codegen::ast::identifier_expression>(variable_map[node.name]);
 }
 
 void codegen_ast_collector::visit(ast::parameterized_identifier_expression& node) {

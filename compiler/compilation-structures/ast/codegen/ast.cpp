@@ -84,7 +84,7 @@ void variable_declaration::accept(visitor& v) {
 }
 
 // variable_assignment
-variable_assignment::variable_assignment(variable_declaration* target, std::unique_ptr<expression> value, class_declaration* expr_type)
+variable_assignment::variable_assignment(std::variant<variable_declaration*, parameter_declaration*> target, std::unique_ptr<expression> value, class_declaration* expr_type)
     : target(target),
       value(std::move(value)),
       expression_type(expr_type) {}
@@ -155,7 +155,7 @@ void this_expression::accept(visitor& v) {
 }
 
 // identifier_expression
-identifier_expression::identifier_expression(variable_declaration* target)
+identifier_expression::identifier_expression(std::variant<variable_declaration*, parameter_declaration*> target)
     : target(target) {}
 identifier_expression::~identifier_expression() = default;
 void identifier_expression::accept(visitor& v) {

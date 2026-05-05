@@ -6,14 +6,7 @@
 #include <format>
 #include <variant>
 
-namespace {
-template<class... Ts>
-struct overloaded : Ts... {
-    using Ts::operator()...;
-};
-template<class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
-} // namespace
+#include "compiler/common/variant-helper.h"
 
 namespace analysis::semantic::phases::details {
 

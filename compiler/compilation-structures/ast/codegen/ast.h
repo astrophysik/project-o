@@ -117,12 +117,12 @@ struct variable_declaration : public statement {
 };
 
 struct variable_assignment : public statement {
-    variable_declaration* target;
+    std::variant<variable_declaration*, parameter_declaration*> target;
     std::unique_ptr<expression> value;
     class_declaration* expression_type;
 
     variable_assignment() = default;
-    explicit variable_assignment(variable_declaration* target, std::unique_ptr<expression> value, class_declaration* expr_type);
+    explicit variable_assignment(std::variant<variable_declaration*, parameter_declaration*> target, std::unique_ptr<expression> value, class_declaration* expr_type);
     ~variable_assignment() override;
     void accept(visitor& visitor) override;
 };
@@ -200,10 +200,10 @@ struct this_expression : public expression {
 };
 
 struct identifier_expression : public expression {
-    variable_declaration* target;
+    std::variant<variable_declaration*, parameter_declaration*> target;
 
     identifier_expression() = default;
-    explicit identifier_expression(variable_declaration* target);
+    explicit identifier_expression(std::variant<variable_declaration*, parameter_declaration*> target);
     ~identifier_expression() override;
 
     void accept(visitor& visitor) override;
