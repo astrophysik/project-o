@@ -156,7 +156,7 @@ void codegen_ast_collector::visit(ast::method_declaration& node) {
 
     std::vector<const structures::type *> params;
     for (auto& param : node.parameters) {
-        params.push_back(program_type_table.resolveType(param->name));
+        params.push_back(program_type_table.resolveType(param->type_name));
     }
     std::string mangled = structures::mangle_method_name(node.name, params);
     current_scope = current_scope->typed_lookup<structures::method_symbol>(mangled)->method_scope.get();
@@ -195,7 +195,7 @@ void codegen_ast_collector::visit(ast::method_declaration& node) {
 void codegen_ast_collector::visit(ast::constructor_declaration& node) {
     std::vector<const structures::type *> params;
     for (auto& param : node.parameters) {
-        params.push_back(program_type_table.resolveType(param->name));
+        params.push_back(program_type_table.resolveType(param->type_name));
     }
     std::string mangled = structures::mangle_method_name(current_class->name, params);
     current_scope = current_scope->typed_lookup<structures::method_symbol>(mangled)->method_scope.get();
@@ -208,6 +208,8 @@ void codegen_ast_collector::visit(ast::constructor_declaration& node) {
         auto codegen_param = std::make_unique<codegen::ast::parameter_declaration>();
         codegen_param->name = param->name;
         codegen_param->type = resolveType(param->type_name);
+        variable_map[param->name] = codegen_param.get();
+
         ctor->parameters.push_back(std::move(codegen_param));
     }
 
