@@ -345,15 +345,16 @@ void codegen_ast_collector::visit(ast::member_expression& node) {
         auto* obj_type = structures::type::inferExpressionType(node.object.get(), {&program_type_table, class_sym, current_scope});
 
         if (obj_type && obj_type->kind == structures::type_kind::Class) {
-            auto* class_type = static_cast<const structures::class_type*>(obj_type);
+            auto* class_type = dynamic_cast<const structures::class_type*>(obj_type);
             auto* target_class = resolveType(class_type->name);
-            if (target_class) {
+            while (target_class != nullptr) {
                 for (auto& field : target_class->fields) {
                     if (field->name == node.member) {
                         member_expr->member = field.get();
                         break;
                     }
                 }
+                target_class = target_class->base_class;
             }
         }
     }
