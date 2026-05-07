@@ -193,7 +193,6 @@ void class_method_checker::visit(ast::parameter_declaration& node) {}
 void class_method_checker::visit(ast::literal_expression& node) {}
 void class_method_checker::visit(ast::this_expression& node) {}
 void class_method_checker::visit(ast::identifier_expression& node) {}
-void class_method_checker::visit(ast::parameterized_identifier_expression& node) {}
 void class_method_checker::visit(ast::member_expression& node) {}
 void class_method_checker::visit(ast::grouping_expression& node) {}
 

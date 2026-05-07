@@ -22,7 +22,6 @@ public:
     virtual void visit(literal_expression& node) = 0;
     virtual void visit(this_expression& node) = 0;
     virtual void visit(identifier_expression& node) = 0;
-    virtual void visit(parameterized_identifier_expression& node) = 0;
     virtual void visit(member_expression& node) = 0;
     virtual void visit(call_expression& node) = 0;
     virtual void visit(grouping_expression& node) = 0;

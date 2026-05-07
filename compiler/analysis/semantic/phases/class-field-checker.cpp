@@ -41,7 +41,6 @@ void class_field_checker::visit(ast::return_statement& node) {}
 void class_field_checker::visit(ast::literal_expression& node) {}
 void class_field_checker::visit(ast::this_expression& node) {}
 void class_field_checker::visit(ast::identifier_expression& node) {}
-void class_field_checker::visit(ast::parameterized_identifier_expression& node) {}
 void class_field_checker::visit(ast::member_expression& node) {}
 void class_field_checker::visit(ast::call_expression& node) {}
 void class_field_checker::visit(ast::grouping_expression& node) {}

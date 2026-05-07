@@ -196,22 +196,6 @@ public:
 };
 
 /**
- * Array[Integer]
- * ^^^^^^^^^^^^^^
- */
-class parameterized_identifier_expression : public expression {
-public:
-    std::string name;
-    std::vector<std::string> type_arguments;
-
-    parameterized_identifier_expression() = default;
-    parameterized_identifier_expression(std::string n, std::vector<std::string> args);
-    ~parameterized_identifier_expression() override;
-
-    void accept(visitor& visitor) override;
-};
-
-/**
  * obj.field
  * ^^^^^^^^^
  */

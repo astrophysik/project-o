@@ -110,7 +110,6 @@ void class_body_collector::visit(ast::return_statement& node) {}
 void class_body_collector::visit(ast::literal_expression& node) {}
 void class_body_collector::visit(ast::this_expression& node) {}
 void class_body_collector::visit(ast::identifier_expression& node) {}
-void class_body_collector::visit(ast::parameterized_identifier_expression& node) {}
 void class_body_collector::visit(ast::member_expression& node) {}
 void class_body_collector::visit(ast::call_expression& node) {}
 void class_body_collector::visit(ast::grouping_expression& node) {}

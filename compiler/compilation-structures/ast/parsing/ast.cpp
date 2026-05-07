@@ -133,15 +133,6 @@ void identifier_expression::accept(visitor& v) {
     v.visit(*this);
 }
 
-// parameterized_identifier_expression
-parameterized_identifier_expression::parameterized_identifier_expression(std::string n, std::vector<std::string> args)
-    : name(std::move(n)),
-      type_arguments(std::move(args)) {}
-parameterized_identifier_expression::~parameterized_identifier_expression() = default;
-void parameterized_identifier_expression::accept(visitor& v) {
-    v.visit(*this);
-}
-
 // member_expression
 member_expression::member_expression(std::unique_ptr<expression> obj, std::string mem)
     : object(std::move(obj)),

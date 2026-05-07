@@ -31,7 +31,6 @@ public:
     void visit(ast::literal_expression& node) override;
     void visit(ast::this_expression& node) override;
     void visit(ast::identifier_expression& node) override;
-    void visit(ast::parameterized_identifier_expression& node) override;
     void visit(ast::member_expression& node) override;
     void visit(ast::call_expression& node) override;
     void visit(ast::grouping_expression& node) override;
