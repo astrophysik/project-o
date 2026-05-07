@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
         auto tokens_res = lexer::tokenize_text(file_content);
         auto parser = parser::parser(tokens_res);
         auto parsing_ast = parser.parse();
-        auto semantic_ast = analysis::semantic::check_program(parsing_ast);
+        auto semantic_ast = analysis::semantic::check_program(parsing_ast, argv[1], file_content);
         analysis::print_codegen_ast(semantic_ast);
     } catch (std::exception& e) {
         std::cerr << "Compilation error : \n" << e.what();

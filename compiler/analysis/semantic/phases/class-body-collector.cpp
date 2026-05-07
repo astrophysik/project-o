@@ -1,10 +1,5 @@
 #include "compiler/analysis/semantic/phases/class-body-collector.h"
 
-#include <format>
-#include <memory>
-#include <string>
-#include <vector>
-
 #include "compiler/compilation-structures/ast/parsing/ast.h"
 
 namespace analysis::semantic::phases::details {
@@ -18,7 +13,7 @@ void class_body_collector::visit(ast::program& node) {
 void class_body_collector::visit(ast::class_declaration& node) {
     current_class = program_symbol_table.typed_lookup<structures::class_symbol>(node.name);
     if (current_class == nullptr) {
-        error_message += std::format("Internal error: class {} not found in symbol table\n", node.name);
+        error_message += errors.format_error(node.span, "Internal error: class {} not found in symbol table", node.name);
         return;
     }
 
@@ -47,7 +42,7 @@ void class_body_collector::visit(ast::class_declaration& node) {
 
 void class_body_collector::visit(ast::variable_declaration& node) {
     if (field_names.contains(node.name)) {
-        error_message += std::format("Duplicate field '{}' in class '{}'\n", node.name, current_class->name);
+        error_message += errors.format_error(node.span, "Duplicate field '{}' in class '{}'", node.name, current_class->name);
         return;
     }
     field_names.insert(node.name);
@@ -68,7 +63,7 @@ void class_body_collector::visit(ast::method_declaration& node) {
     std::string mangled = structures::mangle_method_name(node.name, param_types);
 
     if (method_names.contains(mangled)) {
-        error_message += std::format("Duplicate method '{}' with same parameters in class '{}'\n", node.name, current_class->name);
+        error_message += errors.format_error(node.span, "Duplicate method '{}' with same parameters in class '{}'", node.name, current_class->name);
         return;
     }
     method_names.insert(mangled);
@@ -91,7 +86,7 @@ void class_body_collector::visit(ast::constructor_declaration& node) {
 
     std::string mangled = structures::mangle_method_name(current_class->name, param_types);
     if (constructor_names.contains(mangled)) {
-        error_message += std::format("Duplicate constructor with same signature '{}' in class '{}'\n", current_class->name, current_class->name);
+        error_message += errors.format_error(node.span, "Duplicate constructor with same signature '{}' in class '{}'", current_class->name, current_class->name);
         return;
     }
     constructor_names.insert(mangled);

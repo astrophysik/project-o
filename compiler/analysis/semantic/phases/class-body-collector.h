@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_set>
 
+#include "compiler/analysis/semantic/error.h"
 #include "compiler/compilation-structures/ast/parsing/ast-visitor.h"
 #include "compiler/compilation-structures/ast/parsing/ast.h"
 #include "compiler/compilation-structures/symbol-table.h"
@@ -14,9 +15,10 @@ namespace details {
 
 class class_body_collector : public ast::visitor {
 public:
-    class_body_collector(structures::symbol_table& symbol_table, structures::type_table& type_table)
+    class_body_collector(structures::symbol_table& symbol_table, structures::type_table& type_table, const error_formatter& errors)
         : program_symbol_table(symbol_table),
-          program_type_table(type_table) {}
+          program_type_table(type_table),
+          errors(errors) {}
 
     void visit(ast::program& node) override;
     void visit(ast::block& node) override;
@@ -46,6 +48,7 @@ public:
 private:
     structures::symbol_table& program_symbol_table;
     structures::type_table& program_type_table;
+    const error_formatter& errors;
     structures::class_symbol* current_class = nullptr;
     std::string error_message{};
 
@@ -58,8 +61,9 @@ private:
 
 inline void process_classes_content(const std::unique_ptr<ast::program>& program,
                                                                 structures::symbol_table& program_symbol_table,
-                                                                structures::type_table& program_type_table) {
-    details::class_body_collector body_collector(program_symbol_table, program_type_table);
+                                                                structures::type_table& program_type_table,
+                                                                const error_formatter& errors) {
+    details::class_body_collector body_collector(program_symbol_table, program_type_table, errors);
     program->accept(body_collector);
     body_collector.get_result();
 }

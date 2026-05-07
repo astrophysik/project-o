@@ -7,11 +7,14 @@
 #include <vector>
 
 #include "ast-forward-declarations.h"
+#include "compiler/compilation-structures/common.h"
 
 namespace ast {
 
 class entity {
 public:
+    common::span span{};
+
     virtual ~entity() = default;
     virtual void accept(visitor& visitor) = 0;
 };

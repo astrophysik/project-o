@@ -2,7 +2,9 @@
 
 #include <memory>
 #include <stdexcept>
+#include <string_view>
 
+#include "compiler/analysis/semantic/error.h"
 #include "compiler/analysis/semantic/phases/class-body-collector.h"
 #include "compiler/analysis/semantic/phases/class-collector.h"
 #include "compiler/analysis/semantic/phases/class-field-checker.h"
@@ -13,11 +15,14 @@
 
 namespace analysis::semantic {
 
-std::unique_ptr<codegen::ast::program> check_program(const std::unique_ptr<ast::program>& program) {
-    auto [program_symbol_table, program_type_table] = phases::collect_program_classes(program);
-    phases::process_classes_content(program, *program_symbol_table, *program_type_table);
-    phases::check_field_content(program, *program_symbol_table, *program_type_table);
-    phases::check_method_content(program, *program_symbol_table, *program_type_table);
+inline std::unique_ptr<codegen::ast::program> check_program(const std::unique_ptr<ast::program>& program,
+                                                            std::string_view file_name,
+                                                            std::string_view source) {
+    error_formatter errors{file_name, source};
+    auto [program_symbol_table, program_type_table] = phases::collect_program_classes(program, errors);
+    phases::process_classes_content(program, *program_symbol_table, *program_type_table, errors);
+    phases::check_field_content(program, *program_symbol_table, *program_type_table, errors);
+    phases::check_method_content(program, *program_symbol_table, *program_type_table, errors);
     return phases::codegen_ast_collect(program, *program_symbol_table, *program_type_table);
 }
 

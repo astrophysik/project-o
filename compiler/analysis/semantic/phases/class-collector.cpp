@@ -1,10 +1,5 @@
 #include "compiler/analysis/semantic/phases/class-collector.h"
 
-#include <exception>
-#include <format>
-#include <memory>
-#include <utility>
-
 #include "compiler/compilation-structures/ast/parsing/ast.h"
 #include "compiler/compilation-structures/symbol-table.h"
 
@@ -18,14 +13,14 @@ void class_collector::visit(ast::program& node) {
 
 void class_collector::visit(ast::class_declaration& node) {
     if (program_symbol_table->lookup(node.name) != nullptr) {
-        error_message += std::format("Class redefinition: class '{}' is already defined\n", node.name);
+        error_message += errors.format_error(node.span, "Class redefinition: class '{}' is already defined", node.name);
         return;
     }
     structures::class_symbol* base_class = nullptr;
     if (node.base_class.has_value()) {
         base_class = program_symbol_table->typed_lookup<structures::class_symbol>(*node.base_class);
         if (base_class == nullptr) {
-            error_message += std::format("Class '{}' inherits from undefined class '{}'\n", node.name, *node.base_class);
+            error_message += errors.format_error(node.span, "Class '{}' inherits from undefined class '{}'", node.name, *node.base_class);
             return;
         }
     } else {

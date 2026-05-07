@@ -5,13 +5,9 @@
 #include <string>
 #include <variant>
 
-namespace lexer {
+#include "compiler/compilation-structures/common.h"
 
-struct span {
-    size_t line_num{};
-    size_t start_pos{};
-    size_t end_pos{};
-};
+namespace lexer {
 
 enum class token_type : uint8_t {
     tok_assignment, // :=
@@ -51,7 +47,7 @@ using token_value = std::variant<int, double, std::string>;
 
 struct token {
     token_type type;
-    span span;
+    common::span span;
     token_value value;
 
     template<typename T>
@@ -130,19 +126,6 @@ inline constexpr std::string_view token_type_to_string(token_type type) noexcept
 } // namespace impl_
 
 } // namespace lexer
-
-template<>
-struct std::formatter<lexer::span> {
-    template<typename ParseContext>
-    constexpr auto parse(ParseContext& ctx) const noexcept {
-        return ctx.begin();
-    }
-
-    template<typename FmtContext>
-    auto format(const lexer::span& span, FmtContext& ctx) const noexcept {
-        return std::format_to(ctx.out(), "{}:{}-{}", span.line_num, span.start_pos, span.end_pos);
-    }
-};
 
 template<>
 struct std::formatter<lexer::token> {

@@ -2,9 +2,6 @@
 
 
 #include <cassert>
-#include <expected>
-#include <format>
-#include <variant>
 
 #include "compiler/common/variant-helper.h"
 
@@ -24,14 +21,14 @@ void class_method_checker::visit(ast::class_declaration& node) {
         try {
             method->accept(*this);
         } catch (const std::exception& e) {
-            error_message += std::format("Semantic error checking method '{}': {}\n", method->name, e.what());
+            error_message += errors.format_error(method->span, "Semantic error checking method '{}': {}", method->name, e.what());
         }
     }
     for (const auto& constructor : node.constructors) {
         try {
             constructor->accept(*this);
         } catch (const std::exception& e) {
-            error_message += std::format("Semantic error checking constructor '{}': {}\n", cls->name, e.what());
+            error_message += errors.format_error(constructor->span, "Semantic error checking constructor '{}': {}", cls->name, e.what());
         }
     }
 }
@@ -41,7 +38,7 @@ void class_method_checker::visit(ast::method_declaration& node) {
         return;
     }
     if (!node.return_type.has_value()) {
-        error_message += "Methods without return type are forbidden\n";
+        error_message += errors.format_error(node.span, "Methods without return type are forbidden");
         return;
     }
 
@@ -69,14 +66,14 @@ void class_method_checker::visit(ast::method_declaration& node) {
                 method_return_type = return_type;
                 body->accept(*this);
                 if (!std::exchange(definitely_returns, false)) {
-                    return std::format("Method '{}' does not return on all code paths\n", node.name);
+                    return errors.format_error(node.span, "Method '{}' does not return on all code paths", node.name);
                 }
                 return std::nullopt;
             },
             [&](const std::unique_ptr<ast::expression>& body) -> std::optional<std::string> {
                 const auto* type = structures::type::inferExpressionType(body.get(), {&program_type_table, current_class_symbol, current_symbol_table});
                 if (!structures::type::isSubtype(type, return_type)) {
-                    return std::format("Expected return type '{}' but inferred type '{}' from expression\n", return_type->toString(), type->toString());
+                    return errors.format_error(body->span, "Expected return type '{}' but inferred type '{}' from expression", return_type->toString(), type->toString());
                 }
                 return std::nullopt;
             }},
@@ -125,7 +122,7 @@ void class_method_checker::visit(ast::if_statement& node) {
     const auto* condition_type =
         structures::type::inferExpressionType(node.condition.get(), {&program_type_table, current_class_symbol, current_symbol_table});
     if (!structures::type::typesEqual(condition_type, program_type_table.resolveType("Boolean"))) {
-        error_message += std::format("Expected 'Boolean' type for condition expression but inferred '{}'\n", condition_type->toString());
+        error_message += errors.format_error(node.condition->span, "Expected 'Boolean' type for condition expression but inferred '{}'", condition_type->toString());
         return;
     }
     node.true_branch->accept(*this);
@@ -144,20 +141,20 @@ void class_method_checker::visit(ast::return_statement& node) {
     definitely_returns = true;
     if (method_return_type == nullptr) {
         if (node.value != nullptr) {
-            error_message += "Constructors cannot return a value\n";
+            error_message += errors.format_error(node.span, "Constructors cannot return a value");
         }
         // this is return in constructor definition, so just return
         return;
     }
 
     if (node.value == nullptr) {
-        error_message += std::format("Method must return a value of type '{}'\n", method_return_type->toString());
+        error_message += errors.format_error(node.span, "Method must return a value of type '{}'", method_return_type->toString());
         return;
     }
 
     const auto* return_type = structures::type::inferExpressionType(node.value.get(), {&program_type_table, current_class_symbol, current_symbol_table});
     if (!structures::type::isSubtype(return_type, method_return_type)) {
-        error_message += std::format("Expected return type '{}' but inferred type '{}' from expression\n", method_return_type->toString(), return_type->toString());
+        error_message += errors.format_error(node.value->span, "Expected return type '{}' but inferred type '{}' from expression", method_return_type->toString(), return_type->toString());
     }
 }
 
@@ -165,7 +162,7 @@ void class_method_checker::visit(ast::while_statement& node) {
     const auto* condition_type =
         structures::type::inferExpressionType(node.condition.get(), {&program_type_table, current_class_symbol, current_symbol_table});
     if (!structures::type::typesEqual(condition_type, program_type_table.resolveType("Boolean"))) {
-        error_message += std::format("Expected 'Boolean' type for condition expression but inferred '{}'\n", condition_type->toString());
+        error_message += errors.format_error(node.condition->span, "Expected 'Boolean' type for condition expression but inferred '{}'", condition_type->toString());
         return;
     }
     node.body->accept(*this);
@@ -174,21 +171,22 @@ void class_method_checker::visit(ast::while_statement& node) {
 void class_method_checker::visit(ast::assignment_statement& node) {
     const auto* target_symbol = current_symbol_table->typed_lookup<structures::variable_symbol>(node.target);
     if (target_symbol == nullptr) {
-        error_message += std::format("Unknown field or variable '{}'\n", node.target);
+        error_message += errors.format_error(node.span, "Unknown field or variable '{}'", node.target);
         return;
     }
     const auto* expr_type = structures::type::inferExpressionType(node.value.get(), {&program_type_table, current_class_symbol, current_symbol_table});
     if (!structures::type::isSubtype(expr_type, target_symbol->type)) {
-        error_message += std::format("Expected type '{}' for assignment to variable '{}' but inferred '{}'\n",
-                                     target_symbol->type->toString(),
-                                     target_symbol->name,
-                                     expr_type->toString());
+        error_message += errors.format_error(node.span,
+                                              "Expected type '{}' for assignment to variable '{}' but inferred '{}'",
+                                              target_symbol->type->toString(),
+                                              target_symbol->name,
+                                              expr_type->toString());
         return;
     }
 }
 
 void class_method_checker::visit(ast::call_expression& node) {
-    error_message += "Call expression with discarded result are forbidden\n";
+    error_message += errors.format_error(node.span, "Call expression with discarded result are forbidden");
 }
 
 void class_method_checker::visit(ast::parameter_declaration& node) {}
