@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "compiler/analysis/semantic/builtin-classes.h"
+#include "compiler/analysis/semantic/error.h"
 #include "compiler/compilation-structures/ast/parsing/ast-visitor.h"
 #include "compiler/compilation-structures/ast/parsing/ast.h"
 #include "compiler/compilation-structures/symbol-table.h"
@@ -16,6 +17,8 @@ namespace details {
 
 class class_collector : public ast::visitor {
 public:
+    explicit class_collector(const error_formatter& errors) : errors(errors) {}
+
     void visit(ast::program& node) override;
     void visit(ast::block& node) override;
     void visit(ast::class_declaration& node) override;
@@ -30,7 +33,6 @@ public:
     void visit(ast::literal_expression& node) override;
     void visit(ast::this_expression& node) override;
     void visit(ast::identifier_expression& node) override;
-    void visit(ast::parameterized_identifier_expression& node) override;
     void visit(ast::member_expression& node) override;
     void visit(ast::call_expression& node) override;
     void visit(ast::grouping_expression& node) override;
@@ -51,13 +53,14 @@ private:
     std::string error_message{};
     std::unique_ptr<structures::symbol_table> program_symbol_table{std::make_unique<structures::symbol_table>(nullptr)};
     std::unique_ptr<structures::type_table> program_type_table{std::make_unique<structures::type_table>()};
+    const error_formatter& errors;
 };
 
 } // namespace details
 
 inline std::pair<std::unique_ptr<structures::symbol_table>, std::unique_ptr<structures::type_table>>
-collect_program_classes(const std::unique_ptr<ast::program>& program) {
-    details::class_collector class_collector;
+collect_program_classes(const std::unique_ptr<ast::program>& program, const error_formatter& errors) {
+    details::class_collector class_collector{errors};
 
     // Add built-in classes before processing user classes
     builtin::add_builtin_classes(class_collector.symbol_table(), class_collector.type_table());

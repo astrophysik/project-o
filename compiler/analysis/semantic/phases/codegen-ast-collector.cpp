@@ -345,22 +345,6 @@ void codegen_ast_collector::visit(ast::identifier_expression& node) {
     last_expression = std::make_unique<codegen::ast::identifier_expression>(variable_map[node.name]);
 }
 
-void codegen_ast_collector::visit(ast::parameterized_identifier_expression& node) {
-    auto* target_class = resolveType(node.name);
-    if (target_class) {
-        auto ctor_call = std::make_unique<codegen::ast::constructor_call_expression>();
-
-        for (auto& ctor : target_class->constructors) {
-            if (ctor->parameters.empty()) {
-                ctor_call->constructor = ctor.get();
-                break;
-            }
-        }
-
-        last_expression = std::move(ctor_call);
-    }
-}
-
 void codegen_ast_collector::visit(ast::member_expression& node) {
     auto member_expr = std::make_unique<codegen::ast::member_expression>();
 

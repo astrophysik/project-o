@@ -31,7 +31,6 @@ class return_statement;
 class literal_expression;
 class this_expression;
 class identifier_expression;
-class parameterized_identifier_expression;
 class member_expression;
 class call_expression;
 class grouping_expression;

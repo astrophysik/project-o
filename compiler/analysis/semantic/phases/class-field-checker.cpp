@@ -1,8 +1,6 @@
-#include "class-field-checker.h"
-
+#include "compiler/analysis/semantic/phases/class-field-checker.h"
 
 #include <cassert>
-#include <format>
 
 namespace analysis::semantic::phases::details {
 
@@ -28,7 +26,7 @@ void class_field_checker::visit(ast::variable_declaration& node) {
         auto * symbol = current_class_symbol->class_scope->typed_lookup<structures::variable_symbol>(node.name);
         symbol->type = type_res;
     } catch (const std::runtime_error& e) {
-        error_message += e.what();
+        error_message += errors.format_error(node.span, "{}", e.what());
     }
 }
 
@@ -43,7 +41,6 @@ void class_field_checker::visit(ast::return_statement& node) {}
 void class_field_checker::visit(ast::literal_expression& node) {}
 void class_field_checker::visit(ast::this_expression& node) {}
 void class_field_checker::visit(ast::identifier_expression& node) {}
-void class_field_checker::visit(ast::parameterized_identifier_expression& node) {}
 void class_field_checker::visit(ast::member_expression& node) {}
 void class_field_checker::visit(ast::call_expression& node) {}
 void class_field_checker::visit(ast::grouping_expression& node) {}

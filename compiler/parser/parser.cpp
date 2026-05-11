@@ -60,7 +60,7 @@ lexer::token parser::consume(lexer::token_type expected, std::string_view messag
         advance();
         return tok;
     }
-    throw parse_error(std::format("{} at line {} pos {}:{}", message, peek().span.line_num, peek().span.start_pos, peek().span.end_pos));
+    throw parse_error(std::format("{} at line {} pos {}:{}\n", message, peek().span.line_num, peek().span.start_pos, peek().span.end_pos));
 }
 
 std::unique_ptr<ast::program> parser::parse() {
@@ -69,6 +69,7 @@ std::unique_ptr<ast::program> parser::parse() {
 
 std::unique_ptr<ast::program> parser::parse_program() {
     auto program = std::make_unique<ast::program>();
+    program->span = peek().span;
     skip_newlines();
     while (not check(lexer::token_type::tok_eof)) {
         // class
@@ -86,6 +87,7 @@ std::unique_ptr<ast::class_declaration> parser::parse_class_declaration() {
     // class name
     auto name_tok = consume(lexer::token_type::tok_identifier, "Expected class name");
     class_decl->name = std::get<std::string>(name_tok.value);
+    class_decl->span = name_tok.span;
 
     // extends
     if (match(lexer::token_type::tok_kw_extends)) {
@@ -143,6 +145,7 @@ std::unique_ptr<ast::variable_declaration> parser::parse_variable_declaration() 
     // var name
     auto name_tok = consume(lexer::token_type::tok_identifier, "Expected variable name");
     var_decl->name = std::get<std::string>(name_tok.value);
+    var_decl->span = name_tok.span;
 
     // :
     consume(lexer::token_type::tok_colon, "Expected ':' after variable name");
@@ -179,7 +182,9 @@ std::unique_ptr<ast::parameter_declaration> parser::parse_parameter() {
 
     // parameter type
     auto type = consume(lexer::token_type::tok_identifier, "Expected type name");
-    return std::make_unique<ast::parameter_declaration>(std::get<std::string>(name.value), std::get<std::string>(type.value));
+    auto param = std::make_unique<ast::parameter_declaration>(std::get<std::string>(name.value), std::get<std::string>(type.value));
+    param->span = name.span;
+    return param;
 }
 
 std::unique_ptr<ast::method_declaration> parser::parse_method_declaration() {
@@ -188,6 +193,7 @@ std::unique_ptr<ast::method_declaration> parser::parse_method_declaration() {
     // method name
     auto name_tok = consume(lexer::token_type::tok_identifier, "Expected method name");
     method->name = std::get<std::string>(name_tok.value);
+    method->span = name_tok.span;
 
     // parameters
     method->parameters = parse_parameters();
@@ -220,6 +226,7 @@ std::unique_ptr<ast::method_declaration> parser::parse_method_declaration() {
 
 std::unique_ptr<ast::constructor_declaration> parser::parse_constructor_declaration() {
     auto ctor = std::make_unique<ast::constructor_declaration>();
+    ctor->span = previous().span; // 'this' keyword
 
     // parameters
     ctor->parameters = parse_parameters();
@@ -237,6 +244,7 @@ std::unique_ptr<ast::constructor_declaration> parser::parse_constructor_declarat
 
 std::unique_ptr<ast::block> parser::parse_block() {
     std::vector<std::unique_ptr<ast::entity>> items;
+    auto block_span = peek().span;
     while (true) {
         skip_newlines();
         if (match(lexer::token_type::tok_kw_var)) {
@@ -249,7 +257,9 @@ std::unique_ptr<ast::block> parser::parse_block() {
             break;
         }
     }
-    return std::make_unique<ast::block>(std::move(items));
+    auto block = std::make_unique<ast::block>(std::move(items));
+    block->span = block_span;
+    return block;
 }
 
 std::unique_ptr<ast::entity> parser::parse_statement() {
@@ -285,6 +295,7 @@ std::unique_ptr<ast::assignment_statement> parser::parse_assignment() {
 
     auto assign = std::make_unique<ast::assignment_statement>();
     assign->target = std::get<std::string>(ident_tok.value);
+    assign->span = ident_tok.span;
 
     // :=
     consume(lexer::token_type::tok_assignment, "Expected ':=' in assignment");
@@ -296,6 +307,7 @@ std::unique_ptr<ast::assignment_statement> parser::parse_assignment() {
 
 std::unique_ptr<ast::while_statement> parser::parse_while() {
     auto while_stmt = std::make_unique<ast::while_statement>();
+    while_stmt->span = previous().span; // 'while' keyword
 
     // expr
     while_stmt->condition = parse_expression();
@@ -313,6 +325,7 @@ std::unique_ptr<ast::while_statement> parser::parse_while() {
 
 std::unique_ptr<ast::if_statement> parser::parse_if() {
     auto if_stmt = std::make_unique<ast::if_statement>();
+    if_stmt->span = previous().span; // 'if' keyword
 
     // expr
     if_stmt->condition = parse_expression();
@@ -336,6 +349,7 @@ std::unique_ptr<ast::if_statement> parser::parse_if() {
 
 std::unique_ptr<ast::return_statement> parser::parse_return() {
     auto ret_stmt = std::make_unique<ast::return_statement>();
+    ret_stmt->span = previous().span; // 'return' keyword
 
     if (not check(lexer::token_type::tok_kw_end) && not check(lexer::token_type::tok_new_line)) {
         // expr
@@ -358,10 +372,15 @@ std::unique_ptr<ast::expression> parser::parse_expression() {
 
             // call expr
             auto member_expr = std::make_unique<ast::member_expression>(std::move(expr), member);
-            expr = std::make_unique<ast::call_expression>(std::move(member_expr), std::move(args));
+            member_expr->span = member_tok.span;
+            auto call_expr = std::make_unique<ast::call_expression>(std::move(member_expr), std::move(args));
+            call_expr->span = member_tok.span;
+            expr = std::move(call_expr);
         } else {
             // field access
-            expr = std::make_unique<ast::member_expression>(std::move(expr), member);
+            auto member_expr = std::make_unique<ast::member_expression>(std::move(expr), member);
+            member_expr->span = member_tok.span;
+            expr = std::move(member_expr);
         }
         skip_newlines();
     }
@@ -373,33 +392,48 @@ std::unique_ptr<ast::expression> parser::parse_primary() {
     if (match(lexer::token_type::tok_int)) {
         // int
         int64_t val = std::get<int>(previous().value);
-        return std::make_unique<ast::literal_expression>(val);
+        auto lit = std::make_unique<ast::literal_expression>(val);
+        lit->span = previous().span;
+        return lit;
     }
     if (match(lexer::token_type::tok_real)) {
         // real
         double val = std::get<double>(previous().value);
-        return std::make_unique<ast::literal_expression>(val);
+        auto lit = std::make_unique<ast::literal_expression>(val);
+        lit->span = previous().span;
+        return lit;
     }
     if (match(lexer::token_type::tok_kw_true)) {
         // true
-        return std::make_unique<ast::literal_expression>(true);
+        auto lit = std::make_unique<ast::literal_expression>(true);
+        lit->span = previous().span;
+        return lit;
     }
     if (match(lexer::token_type::tok_kw_false)) {
         // false
-        return std::make_unique<ast::literal_expression>(false);
+        auto lit = std::make_unique<ast::literal_expression>(false);
+        lit->span = previous().span;
+        return lit;
     }
     if (match(lexer::token_type::tok_kw_this)) {
         // this
-        return std::make_unique<ast::this_expression>();
+        auto this_expr = std::make_unique<ast::this_expression>();
+        this_expr->span = previous().span;
+        return this_expr;
     }
     if (match(lexer::token_type::tok_identifier)) {
         // identifier
+        auto ident_span = previous().span;
         std::string id = std::get<std::string>(previous().value);
         auto expr = std::make_unique<ast::identifier_expression>(id);
+        expr->span = ident_span;
         if (match(lexer::token_type::tok_open_par)) {
             auto args = parse_arguments();
             auto member_expr = std::make_unique<ast::member_expression>(std::move(expr), id);
-            return std::make_unique<ast::call_expression>(std::move(member_expr), std::move(args));
+            member_expr->span = ident_span;
+            auto call_expr = std::make_unique<ast::call_expression>(std::move(member_expr), std::move(args));
+            call_expr->span = ident_span;
+            return call_expr;
         } else {
             return expr;
         }
@@ -407,9 +441,12 @@ std::unique_ptr<ast::expression> parser::parse_primary() {
 
     // prioritization
     if (match(lexer::token_type::tok_open_par)) {
+        auto open_span = previous().span;
         auto inner = parse_expression();
         consume(lexer::token_type::tok_close_par, "Expected ')' after grouped expression");
-        return std::make_unique<ast::grouping_expression>(std::move(inner));
+        auto group = std::make_unique<ast::grouping_expression>(std::move(inner));
+        group->span = open_span;
+        return group;
     }
     throw parse_error(std::format("Unexpected token at line {} pos {}:{}", peek().span.line_num, peek().span.start_pos, peek().span.end_pos));
 }

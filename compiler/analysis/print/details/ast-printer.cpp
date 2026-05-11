@@ -200,17 +200,6 @@ void ast_printer::visit(ast::identifier_expression& node) {
     std::println("IdentifierExpression: name={}", node.name);
 }
 
-void ast_printer::visit(ast::parameterized_identifier_expression& node) {
-    std::print("ParameterizedIdentifierExpression: name={}", node.name);
-    std::print(", type_args=[");
-    for (size_t i = 0; i < node.type_arguments.size(); ++i) {
-        if (i > 0)
-            std::print(", ");
-        std::print("{}", node.type_arguments[i]);
-    }
-    std::println("]");
-}
-
 void ast_printer::visit(ast::member_expression& node) {
     std::println("MemberExpression: member={}", node.member);
     indent++;

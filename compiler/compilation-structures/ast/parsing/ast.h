@@ -7,11 +7,14 @@
 #include <vector>
 
 #include "ast-forward-declarations.h"
+#include "compiler/compilation-structures/common.h"
 
 namespace ast {
 
 class entity {
 public:
+    common::span span{};
+
     virtual ~entity() = default;
     virtual void accept(visitor& visitor) = 0;
 };
@@ -188,22 +191,6 @@ public:
     identifier_expression() = default;
     explicit identifier_expression(std::string n);
     ~identifier_expression() override;
-
-    void accept(visitor& visitor) override;
-};
-
-/**
- * Array[Integer]
- * ^^^^^^^^^^^^^^
- */
-class parameterized_identifier_expression : public expression {
-public:
-    std::string name;
-    std::vector<std::string> type_arguments;
-
-    parameterized_identifier_expression() = default;
-    parameterized_identifier_expression(std::string n, std::vector<std::string> args);
-    ~parameterized_identifier_expression() override;
 
     void accept(visitor& visitor) override;
 };
