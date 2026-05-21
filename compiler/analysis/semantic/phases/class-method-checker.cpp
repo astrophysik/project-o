@@ -112,9 +112,9 @@ void class_method_checker::visit(ast::block& node) {
 void class_method_checker::visit(ast::variable_declaration& node) {
     const auto* type_res =
         structures::type::inferExpressionType(node.initializer.get(), {&program_type_table, current_class_symbol, current_symbol_table});
-//    if (current_symbol_table->typed_lookup<structures::variable_symbol>(node.name) != nullptr) {
-//        throw std::runtime_error{std::format("variable {} is already defined", node.name)};
-//    }
+    if (current_symbol_table->typed_lookup<structures::variable_symbol>(node.name) != nullptr) {
+        throw std::runtime_error{std::format("variable {} is already defined", node.name)};
+    }
     current_symbol_table->add(std::make_unique<structures::variable_symbol>(node.name, type_res));
 }
 
