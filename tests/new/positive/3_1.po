@@ -1,0 +1,15 @@
+class test is
+  this(x:Integer) is
+    value := x
+  end
+
+  var value : Integer(0)
+end
+
+class Main is
+  this() is
+    var n : Integer(42)
+    var t : test(n)
+    var result : t.value.Equal(n)
+  end
+end

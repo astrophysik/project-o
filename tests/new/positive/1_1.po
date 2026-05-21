@@ -1,0 +1,6 @@
+class test is
+end
+class Main is
+  this() is
+  end
+end

@@ -1,0 +1,9 @@
+class testClass is
+  var x : 42
+end
+
+class Main is
+  this() is
+    var test : testClass()
+  end
+end

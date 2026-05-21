@@ -1,0 +1,14 @@
+class test is
+  this() is
+    value := 42
+  end
+
+  var value : Integer(0)
+end
+
+class Main is
+  this() is
+    var t : test()
+    var result : t.value.Equal(42)
+  end
+end

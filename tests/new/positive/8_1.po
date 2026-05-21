@@ -1,0 +1,31 @@
+class Base is
+  this() is
+    x := 42
+  end
+  
+  var x : 0
+end
+
+class Derived extends Base is
+  this(a:Integer) is
+    y := a
+  end
+
+  var y : 0
+end  
+
+class moreDerived extends Derived is
+  this(a:Integer) is
+    z := a
+  end
+  method getX() : Integer => return x
+    
+
+  var z : 0
+end  
+
+class Main is
+  this() is
+    var derObj : moreDerived(2)
+    var res : derObj.getX().Equal(42)
+  end

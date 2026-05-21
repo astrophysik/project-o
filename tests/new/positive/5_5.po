@@ -1,0 +1,17 @@
+class testClass is
+  this() is
+    x := 1
+  end
+  this(a:Integer) is
+    x := a
+  end
+  
+  var x : 0
+end
+
+class Main is
+  this() is
+    var one : testClass()
+    var num : testClass(42)
+  end
+end

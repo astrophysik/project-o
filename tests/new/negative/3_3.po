@@ -1,0 +1,13 @@
+class test is
+  this(x:Integer, y:Boolean) is
+    value := x
+  end
+
+  var value : Integer(0)
+end
+
+class Main is
+  this() is
+    var t1 : test(true, 42)
+  end
+end
