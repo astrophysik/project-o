@@ -1,23 +1,21 @@
 #include "compiler/analysis/print/details/codegen-ast-printer.h"
 
-#include <print>
-
 #include "compiler/common/variant-helper.h"
 
 namespace analysis::details {
 
 void codegen_ast_printer::print_indent() {
     for (int i = 0; i < indent; ++i) {
-        std::print("  ");
+        std::cout << "  ";
     }
 }
 
 void codegen_ast_printer::visit(codegen::ast::program& node) {
-    std::println("Program:");
+    std::cout << "Program:\n";
     indent++;
     if (!node.internal_classes.empty()) {
         print_indent();
-        std::println("InternalClasses:");
+        std::cout << "InternalClasses:\n";
         indent++;
         for (auto& cls : node.internal_classes) {
             print_indent();
@@ -33,7 +31,7 @@ void codegen_ast_printer::visit(codegen::ast::program& node) {
 }
 
 void codegen_ast_printer::visit(codegen::ast::block& node) {
-    std::println("Block:");
+    std::cout << "Block:\n";
     indent++;
     for (auto& item : node.items) {
         print_indent();
@@ -43,11 +41,11 @@ void codegen_ast_printer::visit(codegen::ast::block& node) {
 }
 
 void codegen_ast_printer::visit(codegen::ast::class_declaration& node) {
-    std::print("ClassDeclaration: name={}", node.name);
+    std::cout << "ClassDeclaration: name=" << node.name;
     if (node.base_class) {
-        std::print(", extends={}", node.base_class->name);
+        std::cout << ", extends=" << node.base_class->name;
     }
-    std::println("");
+    std::cout << "\n";
     indent++;
     for (auto& field : node.fields) {
         print_indent();
@@ -65,11 +63,11 @@ void codegen_ast_printer::visit(codegen::ast::class_declaration& node) {
 }
 
 void codegen_ast_printer::visit(codegen::ast::field_declaration& node) {
-    std::print("FieldDeclaration: name={}", node.name);
+    std::cout << "FieldDeclaration: name=" << node.name;
     if (node.type) {
-        std::print(", type={}", node.type->name);
+        std::cout << ", type=" << node.type->name;
     }
-    std::println("");
+    std::cout << "\n";
     if (node.initializer) {
         indent++;
         print_indent();
@@ -79,11 +77,11 @@ void codegen_ast_printer::visit(codegen::ast::field_declaration& node) {
 }
 
 void codegen_ast_printer::visit(codegen::ast::variable_declaration& node) {
-    std::print("VariableDeclaration: name={}", node.name);
+    std::cout << "VariableDeclaration: name=" << node.name;
     if (node.type) {
-        std::print(", type={}", node.type->name);
+        std::cout << ", type=" << node.type->name;
     }
-    std::println("");
+    std::cout << "\n";
     if (node.initializer) {
         indent++;
         print_indent();
@@ -93,22 +91,22 @@ void codegen_ast_printer::visit(codegen::ast::variable_declaration& node) {
 }
 
 void codegen_ast_printer::visit(codegen::ast::parameter_declaration& node) {
-    std::print("ParameterDeclaration: name={}", node.name);
+    std::cout << "ParameterDeclaration: name=" << node.name;
     if (node.type) {
-        std::print(", type={}", node.type->name);
+        std::cout << ", type=" << node.type->name;
     }
-    std::println("");
+    std::cout << "\n";
 }
 
 void codegen_ast_printer::visit(codegen::ast::method_declaration& node) {
-    std::print("MethodDeclaration: name={}", node.name);
+    std::cout << "MethodDeclaration: name=" << node.name;
     if (node.return_type) {
-        std::print(", return_type={}", node.return_type->name);
+        std::cout << ", return_type=" << node.return_type->name;
     }
-    std::println("");
+    std::cout << "\n";
     indent++;
     print_indent();
-    std::println("Parameters:");
+    std::cout << "Parameters:\n";
     indent++;
     for (auto& param : node.parameters) {
         print_indent();
@@ -117,7 +115,7 @@ void codegen_ast_printer::visit(codegen::ast::method_declaration& node) {
     indent--;
     if (node.body) {
         print_indent();
-        std::println("Body:");
+        std::cout << "Body:\n";
         indent++;
         print_indent();
         std::visit([this](auto& body) { body->accept(*this); }, *node.body);
@@ -127,10 +125,10 @@ void codegen_ast_printer::visit(codegen::ast::method_declaration& node) {
 }
 
 void codegen_ast_printer::visit(codegen::ast::constructor_declaration& node) {
-    std::println("ConstructorDeclaration:");
+    std::cout << "ConstructorDeclaration:\n";
     indent++;
     print_indent();
-    std::println("Parameters:");
+    std::cout << "Parameters:\n";
     indent++;
     for (auto& param : node.parameters) {
         print_indent();
@@ -139,7 +137,7 @@ void codegen_ast_printer::visit(codegen::ast::constructor_declaration& node) {
     indent--;
     if (node.body) {
         print_indent();
-        std::println("Body:");
+        std::cout << "Body:\n";
         indent++;
         print_indent();
         node.body->accept(*this);
@@ -149,9 +147,9 @@ void codegen_ast_printer::visit(codegen::ast::constructor_declaration& node) {
 }
 
 void codegen_ast_printer::visit(codegen::ast::variable_assignment& node) {
-    std::visit(overloaded{[](codegen::ast::variable_declaration* decl) { std::println("VariableAssignment: target={}", decl->name); },
-                          [](codegen::ast::parameter_declaration* decl) { std::println("VariableAssignment: target={}", decl->name); },
-                          [](codegen::ast::field_declaration* decl) { std::println("VariableAssignment: target={}", decl->name); }},
+    std::visit(overloaded{[](codegen::ast::variable_declaration* decl) { std::cout << "VariableAssignment: target=" << decl->name << "\n"; },
+                          [](codegen::ast::parameter_declaration* decl) { std::cout << "VariableAssignment: target=" << decl->name << "\n"; },
+                          [](codegen::ast::field_declaration* decl) { std::cout << "VariableAssignment: target=" << decl->name << "\n"; }},
                node.target);
     indent++;
     print_indent();
@@ -160,7 +158,7 @@ void codegen_ast_printer::visit(codegen::ast::variable_assignment& node) {
 }
 
 void codegen_ast_printer::visit(codegen::ast::field_assignment& node) {
-    std::println("FieldAssignment: target={}", node.target->member->name);
+    std::cout << "FieldAssignment: target=" << node.target->member->name << "\n";
     indent++;
     print_indent();
     node.value->accept(*this);
@@ -168,16 +166,16 @@ void codegen_ast_printer::visit(codegen::ast::field_assignment& node) {
 }
 
 void codegen_ast_printer::visit(codegen::ast::while_statement& node) {
-    std::println("WhileStatement:");
+    std::cout << "WhileStatement:\n";
     indent++;
     print_indent();
-    std::println("Condition:");
+    std::cout << "Condition:\n";
     indent++;
     print_indent();
     node.condition->accept(*this);
     indent--;
     print_indent();
-    std::println("Body:");
+    std::cout << "Body:\n";
     indent++;
     print_indent();
     node.body->accept(*this);
@@ -185,23 +183,23 @@ void codegen_ast_printer::visit(codegen::ast::while_statement& node) {
 }
 
 void codegen_ast_printer::visit(codegen::ast::if_statement& node) {
-    std::println("IfStatement:");
+    std::cout << "IfStatement:\n";
     indent++;
     print_indent();
-    std::println("Condition:");
+    std::cout << "Condition:\n";
     indent++;
     print_indent();
     node.condition->accept(*this);
     indent--;
     print_indent();
-    std::println("TrueBranch:");
+    std::cout << "TrueBranch:\n";
     indent++;
     print_indent();
     node.true_branch->accept(*this);
     indent--;
     if (node.false_branch) {
         print_indent();
-        std::println("FalseBranch:");
+        std::cout << "FalseBranch:\n";
         indent++;
         print_indent();
         node.false_branch->accept(*this);
@@ -211,7 +209,7 @@ void codegen_ast_printer::visit(codegen::ast::if_statement& node) {
 }
 
 void codegen_ast_printer::visit(codegen::ast::return_statement& node) {
-    std::println("ReturnStatement:");
+    std::cout << "ReturnStatement:\n";
     if (node.value) {
         indent++;
         print_indent();
@@ -221,40 +219,40 @@ void codegen_ast_printer::visit(codegen::ast::return_statement& node) {
 }
 
 void codegen_ast_printer::visit(codegen::ast::literal_expression& node) {
-    std::print("LiteralExpression: ");
-    std::visit([](auto&& val) { std::println("{}", val); }, node.value);
+    std::cout << "LiteralExpression: ";
+    std::visit([](auto&& val) { std::cout << val << "\n"; }, node.value);
 }
 
 void codegen_ast_printer::visit(codegen::ast::this_expression& node) {
-    std::print("ThisExpression");
+    std::cout << "ThisExpression";
     if (node.type) {
-        std::print(": type={}", node.type->name);
+        std::cout << ": type=" << node.type->name;
     }
-    std::println("");
+    std::cout << "\n";
 }
 
 void codegen_ast_printer::visit(codegen::ast::identifier_expression& node) {
-    std::visit(overloaded{[](codegen::ast::variable_declaration* decl) { std::println("IdentifierExpression: variable name={}", decl->name); },
-                          [](codegen::ast::parameter_declaration* decl) { std::println("IdentifierExpression: parameter target={}", decl->name); },
-                          [](codegen::ast::field_declaration* decl) { std::println("IdentifierExpression: field target={}", decl->name); }},
+    std::visit(overloaded{[](codegen::ast::variable_declaration* decl) { std::cout << "IdentifierExpression: variable name=" << decl->name << "\n"; },
+                          [](codegen::ast::parameter_declaration* decl) { std::cout << "IdentifierExpression: parameter target=" << decl->name << "\n"; },
+                          [](codegen::ast::field_declaration* decl) { std::cout << "IdentifierExpression: field target=" << decl->name << "\n"; }},
                node.target);
 }
 
 void codegen_ast_printer::visit(codegen::ast::method_call_expression& node) {
-    std::print("MethodCallExpression: method={}", node.method->name);
+    std::cout << "MethodCallExpression: method=" << node.method->name;
     if (node.return_type) {
-        std::print(", return_type={}", node.return_type->name);
+        std::cout << ", return_type=" << node.return_type->name;
     }
-    std::println("");
+    std::cout << "\n";
     indent++;
     print_indent();
-    std::println("Object:");
+    std::cout << "Object:\n";
     indent++;
     print_indent();
     node.object->accept(*this);
     indent--;
     print_indent();
-    std::println("Arguments:");
+    std::cout << "Arguments:\n";
     indent++;
     for (auto& arg : node.arguments) {
         print_indent();
@@ -264,12 +262,12 @@ void codegen_ast_printer::visit(codegen::ast::method_call_expression& node) {
 }
 
 void codegen_ast_printer::visit(codegen::ast::constructor_call_expression& node) {
-    std::println("ConstructorCallExpression:");
+    std::cout << "ConstructorCallExpression:\n";
     indent++;
     print_indent();
-    std::println("Class: {}", node.constructor->class_owner->name);
+    std::cout << "Class: " << node.constructor->class_owner->name << "\n";
     print_indent();
-    std::println("Arguments:");
+    std::cout << "Arguments:\n";
     indent++;
     for (auto& arg : node.arguments) {
         print_indent();
@@ -279,7 +277,7 @@ void codegen_ast_printer::visit(codegen::ast::constructor_call_expression& node)
 }
 
 void codegen_ast_printer::visit(codegen::ast::member_expression& node) {
-    std::println("MemberExpression: member={}", node.member->name);
+    std::cout << "MemberExpression: member=" << node.member->name << "\n";
     indent++;
     print_indent();
     node.object->accept(*this);
@@ -287,7 +285,7 @@ void codegen_ast_printer::visit(codegen::ast::member_expression& node) {
 }
 
 void codegen_ast_printer::visit(codegen::ast::grouping_expression& node) {
-    std::println("GroupingExpression:");
+    std::cout << "GroupingExpression:\n";
     indent++;
     print_indent();
     node.inner->accept(*this);

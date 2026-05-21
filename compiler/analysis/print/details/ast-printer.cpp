@@ -1,18 +1,16 @@
 #include "compiler/analysis/print/details/ast-printer.h"
 
-#include <print>
-
 #include "compiler/compilation-structures/ast/parsing/ast.h"
 
 namespace analysis::details {
 void ast_printer::print_indent() {
     for (int i = 0; i < indent; ++i) {
-        std::print("  ");
+        std::cout << "  ";
     }
 }
 
 void ast_printer::visit(ast::program& node) {
-    std::println("Program:");
+    std::cout << "Program:\n";
     indent++;
     for (auto& cls : node.classes) {
         print_indent();
@@ -22,7 +20,7 @@ void ast_printer::visit(ast::program& node) {
 }
 
 void ast_printer::visit(ast::block& node) {
-    std::println("Block:");
+    std::cout << "Block:\n";
     indent++;
     for (auto& item : node.items) {
         print_indent();
@@ -32,11 +30,11 @@ void ast_printer::visit(ast::block& node) {
 }
 
 void ast_printer::visit(ast::class_declaration& node) {
-    std::print("ClassDeclaration: name={}", node.name);
+    std::cout << "ClassDeclaration: name=" << node.name;
     if (node.base_class) {
-        std::print(", extends={}", *node.base_class);
+        std::cout << ", extends=" << *node.base_class;
     }
-    std::println("");
+    std::cout << "\n";
     indent++;
     for (auto& field : node.fields) {
         print_indent();
@@ -54,7 +52,7 @@ void ast_printer::visit(ast::class_declaration& node) {
 }
 
 void ast_printer::visit(ast::variable_declaration& node) {
-    std::println("VariableDeclaration: name={}", node.name);
+    std::cout << "VariableDeclaration: name=" << node.name << "\n";
     if (node.initializer) {
         indent++;
         print_indent();
@@ -64,18 +62,18 @@ void ast_printer::visit(ast::variable_declaration& node) {
 }
 
 void ast_printer::visit(ast::parameter_declaration& node) {
-    std::println("ParameterDeclaration: name={}, type={}", node.name, node.type_name);
+    std::cout << "ParameterDeclaration: name=" << node.name << ", type=" << node.type_name << "\n";
 }
 
 void ast_printer::visit(ast::method_declaration& node) {
-    std::print("MethodDeclaration: name={}", node.name);
+    std::cout << "MethodDeclaration: name=" << node.name;
     if (node.return_type) {
-        std::print(", return_type={}", *node.return_type);
+        std::cout << ", return_type=" << *node.return_type;
     }
-    std::println("");
+    std::cout << "\n";
     indent++;
     print_indent();
-    std::println("Parameters:");
+    std::cout << "Parameters:\n";
     indent++;
     for (auto& param : node.parameters) {
         print_indent();
@@ -84,7 +82,7 @@ void ast_printer::visit(ast::method_declaration& node) {
     indent--;
     if (node.body) {
         print_indent();
-        std::println("Body:");
+        std::cout << "Body:\n";
         indent++;
         print_indent();
         std::visit([this](auto& body) { body->accept(*this); }, *node.body);
@@ -94,10 +92,10 @@ void ast_printer::visit(ast::method_declaration& node) {
 }
 
 void ast_printer::visit(ast::constructor_declaration& node) {
-    std::println("ConstructorDeclaration:");
+    std::cout << "ConstructorDeclaration:\n";
     indent++;
     print_indent();
-    std::println("Parameters:");
+    std::cout << "Parameters:\n";
     indent++;
     for (auto& param : node.parameters) {
         print_indent();
@@ -106,7 +104,7 @@ void ast_printer::visit(ast::constructor_declaration& node) {
     indent -= 2;
     if (node.body) {
         print_indent();
-        std::println("Body:");
+        std::cout << "Body:\n";
         indent++;
         print_indent();
         node.body->accept(*this);
@@ -116,7 +114,7 @@ void ast_printer::visit(ast::constructor_declaration& node) {
 }
 
 void ast_printer::visit(ast::assignment_statement& node) {
-    std::println("AssignmentStatement: target={}", node.target);
+    std::cout << "AssignmentStatement: target=" << node.target << "\n";
     indent++;
     print_indent();
     node.value->accept(*this);
@@ -124,16 +122,16 @@ void ast_printer::visit(ast::assignment_statement& node) {
 }
 
 void ast_printer::visit(ast::while_statement& node) {
-    std::println("WhileStatement:");
+    std::cout << "WhileStatement:\n";
     indent++;
     print_indent();
-    std::println("Condition:");
+    std::cout << "Condition:\n";
     indent++;
     print_indent();
     node.condition->accept(*this);
     indent--;
     print_indent();
-    std::println("Body:");
+    std::cout << "Body:\n";
     indent++;
     print_indent();
     node.body->accept(*this);
@@ -142,23 +140,23 @@ void ast_printer::visit(ast::while_statement& node) {
 }
 
 void ast_printer::visit(ast::if_statement& node) {
-    std::println("IfStatement:");
+    std::cout << "IfStatement:\n";
     indent++;
     print_indent();
-    std::println("Condition:");
+    std::cout << "Condition:\n";
     indent++;
     print_indent();
     node.condition->accept(*this);
     indent--;
     print_indent();
-    std::println("TrueBranch:");
+    std::cout << "TrueBranch:\n";
     indent++;
     print_indent();
     node.true_branch->accept(*this);
     indent--;
     if (node.false_branch) {
         print_indent();
-        std::println("FalseBranch:");
+        std::cout << "FalseBranch:\n";
         indent++;
         print_indent();
         node.false_branch->accept(*this);
@@ -168,7 +166,7 @@ void ast_printer::visit(ast::if_statement& node) {
 }
 
 void ast_printer::visit(ast::return_statement& node) {
-    std::println("ReturnStatement:");
+    std::cout << "ReturnStatement:\n";
     if (node.value) {
         indent++;
         print_indent();
@@ -178,30 +176,30 @@ void ast_printer::visit(ast::return_statement& node) {
 }
 
 void ast_printer::visit(ast::literal_expression& node) {
-    std::print("LiteralExpression: ");
+    std::cout << "LiteralExpression: ";
     switch (node.type) {
     case ast::literal_expression::type::integer:
-        std::println("int={}", std::get<int64_t>(node.value));
+        std::cout << "int=" << std::get<int64_t>(node.value) << "\n";
         break;
     case ast::literal_expression::type::real:
-        std::println("real={}", std::get<double>(node.value));
+        std::cout << "real=" << std::get<double>(node.value) << "\n";
         break;
     case ast::literal_expression::type::boolean:
-        std::println("bool={}", std::get<bool>(node.value));
+        std::cout << "bool=" << std::get<bool>(node.value) << "\n";
         break;
     }
 }
 
 void ast_printer::visit(ast::this_expression& node) {
-    std::println("ThisExpression");
+    std::cout << "ThisExpression\n";
 }
 
 void ast_printer::visit(ast::identifier_expression& node) {
-    std::println("IdentifierExpression: name={}", node.name);
+    std::cout << "IdentifierExpression: name=" << node.name << "\n";
 }
 
 void ast_printer::visit(ast::member_expression& node) {
-    std::println("MemberExpression: member={}", node.member);
+    std::cout << "MemberExpression: member=" << node.member << "\n";
     indent++;
     print_indent();
     node.object->accept(*this);
@@ -209,16 +207,16 @@ void ast_printer::visit(ast::member_expression& node) {
 }
 
 void ast_printer::visit(ast::call_expression& node) {
-    std::println("CallExpression:");
+    std::cout << "CallExpression:\n";
     indent++;
     print_indent();
-    std::println("Callee:");
+    std::cout << "Callee:\n";
     indent++;
     print_indent();
     node.callee->accept(*this);
     indent--;
     print_indent();
-    std::println("Arguments:");
+    std::cout << "Arguments:\n";
     indent++;
     for (auto& arg : node.arguments) {
         print_indent();
@@ -228,7 +226,7 @@ void ast_printer::visit(ast::call_expression& node) {
 }
 
 void ast_printer::visit(ast::grouping_expression& node) {
-    std::println("GroupingExpression:");
+    std::cout << "GroupingExpression:\n";
     indent++;
     print_indent();
     node.inner->accept(*this);
