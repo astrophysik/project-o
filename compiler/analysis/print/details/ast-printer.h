@@ -1,7 +1,6 @@
 #pragma once
 
 #include <iostream>
-#include <print>
 
 #include "compiler/compilation-structures/ast/parsing/ast-visitor.h"
 #include "compiler/compilation-structures/ast/parsing/ast.h"

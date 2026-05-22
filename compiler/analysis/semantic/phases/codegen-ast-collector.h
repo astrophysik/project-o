@@ -53,6 +53,7 @@ private:
     bool inside_function_scope = false;
     codegen::ast::method_declaration* current_method = nullptr;
     structures::symbol_table* current_scope = nullptr;
+    size_t current_method_pass_index = 0;
 
     // Mappings from parsing AST to codegen AST
     std::unordered_map<ast::class_declaration*, codegen::ast::class_declaration*> class_map;

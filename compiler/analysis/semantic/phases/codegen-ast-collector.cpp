@@ -88,6 +88,7 @@ void codegen_ast_collector::visit(ast::program& node) {
             ctor->accept(*this);
         }
 
+        current_method_pass_index = 0;
         for (auto& method : cls->methods) {
             method->accept(*this);
         }
@@ -150,9 +151,8 @@ void codegen_ast_collector::visit(ast::parameter_declaration& node) {
 }
 
 void codegen_ast_collector::visit(ast::method_declaration& node) {
-    auto it = std::find_if(current_class->methods.begin(), current_class->methods.end(), [&node](const auto& method) { return method->name == node.name; });
-    assert(it != current_class->methods.end());
-    codegen::ast::method_declaration* method = it->get();
+    assert(current_method_pass_index < current_class->methods.size());
+    codegen::ast::method_declaration* method = current_class->methods[current_method_pass_index++].get();
 
     std::vector<const structures::type *> params;
     for (auto& param : node.parameters) {
