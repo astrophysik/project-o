@@ -102,6 +102,16 @@ void ast_printer::visit(ast::constructor_declaration& node) {
         param->accept(*this);
     }
     indent -= 2;
+    if (node.super_parameters) {
+        print_indent();
+        std::cout << "Super constructor arguments:\n";
+        indent++;
+        for (auto& arg : *node.super_parameters) {
+            print_indent();
+            arg->accept(*this);
+        }
+        indent--;
+    }
     if (node.body) {
         print_indent();
         std::cout << "Body:\n";

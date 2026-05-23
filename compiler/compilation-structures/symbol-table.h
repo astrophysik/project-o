@@ -31,7 +31,7 @@ struct symbol {
 inline std::string mangle_method_name(const std::string& name, const std::vector<const type*>& param_types) {
     std::string result = name + "(";
     for (size_t i = 0; i < param_types.size(); ++i) {
-        if (i != param_types.size() - 1) {
+        if (i > 0) {
             result += ", ";
         }
         result += param_types[i]->toString();

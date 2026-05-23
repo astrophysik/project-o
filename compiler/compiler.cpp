@@ -25,6 +25,7 @@ int main(int argc, char* argv[]) {
         auto parsing_ast = parser.parse();
         auto semantic_ast = analysis::semantic::check_program(parsing_ast, argv[1], file_content);
 
+//        analysis::print_codegen_ast(semantic_ast);
         codegen::llvm_ir::llvm_codegen ir_gen{std::string(argv[1])};
         ir_gen.emit(*semantic_ast);
         std::cout << ir_gen.ir_to_string() << "\n";
@@ -35,12 +36,12 @@ int main(int argc, char* argv[]) {
         auto obj_path = input_path;
         obj_path.replace_extension(".o");
 
-        if (!ir_gen.write_ir_file(ir_path.string())) {
-            std::cerr << "Failed to write LLVM IR to " << ir_path.string() << "\n";
-        }
-        if (!ir_gen.write_object_file(obj_path.string())) {
-            std::cerr << "Failed to write object file to " << obj_path.string() << "\n";
-        }
+//        if (!ir_gen.write_ir_file(ir_path.string())) {
+//            std::cerr << "Failed to write LLVM IR to " << ir_path.string() << "\n";
+//        }
+//        if (!ir_gen.write_object_file(obj_path.string())) {
+//            std::cerr << "Failed to write object file to " << obj_path.string() << "\n";
+//        }
     } catch (std::exception& e) {
         std::cerr << "Compilation error : \n" << e.what();
     }

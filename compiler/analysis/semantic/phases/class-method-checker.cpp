@@ -98,6 +98,40 @@ void class_method_checker::visit(ast::constructor_declaration& node) {
         const auto* param_type = program_type_table.resolveType(param->type_name);
         current_symbol_table->add(std::make_unique<structures::variable_symbol>(param_name, param_type));
     }
+
+    // check super class call
+    auto * base_class = current_class_symbol->base_class;
+    if (structures::type_table::isPrimitiveTypeName(base_class->name)) {
+        if (node.super_parameters.has_value()) {
+            error_message += errors.format_error(node.span, "There is no super constructor to call");
+            return;
+        }
+    } else {
+        if (!node.super_parameters.has_value()) {
+            error_message += errors.format_error(node.span, "Class should explicitly call super constructor");
+            return;
+        }
+        auto &super_constructor_params = *node.super_parameters;
+        std::vector<const structures::type *> super_constructor_param_types;
+        super_constructor_param_types.reserve(super_constructor_params.size());
+        for (auto &super_constructor_param : super_constructor_params) {
+            super_constructor_param_types.push_back(structures::type::inferExpressionType(super_constructor_param.get(), {&program_type_table, current_class_symbol, current_symbol_table}));
+        }
+
+        bool matched = false;
+        for (auto &super_constructors : base_class->constructors) {
+            if (structures::type::isSubTypeList(super_constructor_param_types, super_constructors->parameter_types)) {
+                matched = true;
+            }
+        }
+
+        if (!matched) {
+            std::string mangled_name = structures::mangle_method_name(base_class->name, super_constructor_param_types);
+            error_message += errors.format_error(node.span, "There is no such constructor in super class {}", mangled_name);
+            return;
+        }
+    }
+
     method_return_type = nullptr;
     node.body->accept(*this);
     std::exchange(definitely_returns, false);

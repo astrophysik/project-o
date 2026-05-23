@@ -1,9 +1,9 @@
 #include "ast.h"
 
-#include <string>
-#include <vector>
-#include <utility>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "ast-visitor.h"
 
@@ -60,8 +60,11 @@ void method_declaration::accept(visitor& v) {
 }
 
 // constructor_declaration
-constructor_declaration::constructor_declaration(std::vector<std::unique_ptr<parameter_declaration>> params, std::unique_ptr<block> body)
+constructor_declaration::constructor_declaration(std::vector<std::unique_ptr<parameter_declaration>> params,
+                                                 std::optional<std::vector<std::unique_ptr<expression>>> super_params,
+                                                 std::unique_ptr<block> body)
     : parameters(std::move(params)),
+      super_parameters(std::move(super_params)),
       body(std::move(body)) {}
 constructor_declaration::~constructor_declaration() = default;
 void constructor_declaration::accept(visitor& v) {

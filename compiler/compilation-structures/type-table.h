@@ -42,6 +42,7 @@ public:
     virtual std::string toString() const {return  "";}
 
     static bool isSubtype(const type* sub, const type* super);
+    static bool isSubTypeList(const std::vector<const type *> & subs, const std::vector<const type *> & supers);
     static bool typesEqual(const type* t1, const type* t2);
     static const type * inferExpressionType(const ast::expression * expression, infer_context context);
 

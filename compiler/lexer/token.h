@@ -39,6 +39,7 @@ enum class token_type : uint8_t {
     tok_kw_this,
     tok_kw_true,
     tok_kw_false,
+    tok_kw_super,
 
     tok_unknown
 };
@@ -118,6 +119,8 @@ inline constexpr std::string_view token_type_to_string(token_type type) noexcept
         return "tok_kw_true";
     case token_type::tok_kw_false:
         return "tok_kw_false";
+    case token_type::tok_kw_super:
+        return "tok_kw_super";
     default:
         return "tok_unknown";
     }
