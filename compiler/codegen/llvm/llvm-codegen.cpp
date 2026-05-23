@@ -356,10 +356,6 @@ void llvm_codegen::emit_constructor_body(codegen::ast::constructor_declaration& 
     parameter_slots.clear();
     variable_slots.clear();
 
-    if (auto it = vtable_globals.find(ctor.class_owner); it != vtable_globals.end()) {
-        builder.CreateStore(it->second, current_this);
-    }
-
     auto arg_it = std::next(fn->arg_begin());
     for (auto& p : ctor.parameters) {
         auto* slot = create_entry_alloca(map_type(p->type), p->name);
@@ -368,15 +364,19 @@ void llvm_codegen::emit_constructor_body(codegen::ast::constructor_declaration& 
         ++arg_it;
     }
 
-//    if (ctor.super_constructor) {
-//        std::vector<::llvm::Value *> args;
-//        args.reserve(ctor.super_constructor->arguments.size() + 1);
-//        args.push_back(current_this);
-//        for (auto & arg : ctor.super_constructor->arguments) {
-//            args.push_back(eval(*arg));
-//        }
-//        builder.CreateCall(constructor_functions.at(ctor.super_constructor->constructor), args);
-//    }
+    if (ctor.super_constructor) {
+        std::vector<::llvm::Value *> args;
+        args.reserve(ctor.super_constructor->arguments.size() + 1);
+        args.push_back(current_this);
+        for (auto & arg : ctor.super_constructor->arguments) {
+            args.push_back(eval(*arg));
+        }
+        builder.CreateCall(constructor_functions.at(ctor.super_constructor->constructor), args);
+    }
+
+    if (auto it = vtable_globals.find(ctor.class_owner); it != vtable_globals.end()) {
+        builder.CreateStore(it->second, current_this);
+    }
 
     for (auto& field : ctor.class_owner->fields) {
         if (!field->initializer) {
