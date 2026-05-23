@@ -83,6 +83,7 @@ struct method_declaration : public declaration {
 
 struct constructor_declaration : public declaration {
     std::vector<std::unique_ptr<parameter_declaration>> parameters;
+    std::unique_ptr<constructor_call_expression> super_constructor;
     std::unique_ptr<block> body;
     class_declaration* class_owner;
 

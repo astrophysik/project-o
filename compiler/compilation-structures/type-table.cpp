@@ -26,27 +26,20 @@ find_method_in_hierarchy(structures::class_symbol* class_symbol, const std::stri
     auto* current = class_symbol;
     structures::method_symbol* best_match = nullptr;
 
-    while (current != nullptr) {
+    while (current != nullptr && best_match == nullptr) {
         for (auto* method : current->methods) {
             if (method->original_name != name)
                 continue;
             if (method->parameter_types.size() != argument_types.size())
                 continue;
 
-            bool matches = true;
             for (size_t i = 0; i < argument_types.size(); ++i) {
                 if (!structures::type::isSubtype(argument_types[i], method->parameter_types[i])) {
-                    matches = false;
                     break;
                 }
             }
-
-            if (matches) {
-                if (best_match != nullptr) {
-                    throw std::runtime_error{std::format("Ambiguous method call '{}' - multiple overloads match\n", name)};
-                }
-                best_match = method;
-            }
+            best_match = method;
+            break;
         }
         current = current->base_class;
     }
@@ -258,6 +251,18 @@ bool type::isSubtype(const type* sub, const type* super) {
     return false;
 }
 
+bool type::isSubTypeList(const std::vector<const type*>& subs, const std::vector<const type*>& supers) {
+    if (subs.size() != supers.size()) {
+        return false;
+    }
+    for (size_t pos = 0; pos < subs.size(); ++pos) {
+        if (!isSubtype(subs[pos], supers[pos])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool type::typesEqual(const type* t1, const type* t2) {
     return t1 == t2;
 }
@@ -301,7 +306,7 @@ const type* type_table::resolveType(const std::string& name) const {
 }
 
 bool type_table::isPrimitiveTypeName(const std::string& name) {
-    return name == "Integer" || name == "Boolean" || name == "Real" || name == "Unit";
+    return name == "Integer" || name == "Boolean" || name == "Real" || name == "Unit" || name == "AnyRef" || name == "AnyVal";
 }
 
 } // namespace structures

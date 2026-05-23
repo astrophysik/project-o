@@ -96,10 +96,11 @@ public:
 class constructor_declaration : public declaration {
 public:
     std::vector<std::unique_ptr<parameter_declaration>> parameters;
+    std::optional<std::vector<std::unique_ptr<expression>>> super_parameters;
     std::unique_ptr<block> body;
 
     constructor_declaration() = default;
-    constructor_declaration(std::vector<std::unique_ptr<parameter_declaration>> params, std::unique_ptr<block> body);
+    constructor_declaration(std::vector<std::unique_ptr<parameter_declaration>> params, std::optional<std::vector<std::unique_ptr<expression>>> super_params, std::unique_ptr<block> body);
     ~constructor_declaration() override;
 
     void accept(visitor& visitor) override;

@@ -135,6 +135,14 @@ void codegen_ast_printer::visit(codegen::ast::constructor_declaration& node) {
         param->accept(*this);
     }
     indent--;
+    if (node.super_constructor) {
+        print_indent();
+        std::cout << "Super constructor call:\n";
+        indent++;
+        print_indent();
+        node.super_constructor->accept(*this);
+        indent--;
+    }
     if (node.body) {
         print_indent();
         std::cout << "Body:\n";

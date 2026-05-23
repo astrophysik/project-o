@@ -368,6 +368,16 @@ void llvm_codegen::emit_constructor_body(codegen::ast::constructor_declaration& 
         ++arg_it;
     }
 
+//    if (ctor.super_constructor) {
+//        std::vector<::llvm::Value *> args;
+//        args.reserve(ctor.super_constructor->arguments.size() + 1);
+//        args.push_back(current_this);
+//        for (auto & arg : ctor.super_constructor->arguments) {
+//            args.push_back(eval(*arg));
+//        }
+//        builder.CreateCall(constructor_functions.at(ctor.super_constructor->constructor), args);
+//    }
+
     for (auto& field : ctor.class_owner->fields) {
         if (!field->initializer) {
             continue;

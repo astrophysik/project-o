@@ -19,7 +19,7 @@ inline const std::unordered_map<std::string_view, token_type> keywords = {
     {"class", token_type::tok_kw_class},   {"extends", token_type::tok_kw_extends}, {"is", token_type::tok_kw_is},         {"var", token_type::tok_kw_var},
     {"method", token_type::tok_kw_method}, {"if", token_type::tok_kw_if},           {"then", token_type::tok_kw_then},     {"else", token_type::tok_kw_else},
     {"while", token_type::tok_kw_while},   {"loop", token_type::tok_kw_loop},       {"return", token_type::tok_kw_return}, {"end", token_type::tok_kw_end},
-    {"this", token_type::tok_kw_this},     {"true", token_type::tok_kw_true},       {"false", token_type::tok_kw_false}};
+    {"this", token_type::tok_kw_this},     {"true", token_type::tok_kw_true},       {"false", token_type::tok_kw_false},   {"super", token_type::tok_kw_super}};
 
 inline bool is_identifier_char(char c, bool first_char = false) noexcept {
     if (first_char) {

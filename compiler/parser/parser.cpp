@@ -231,6 +231,16 @@ std::unique_ptr<ast::constructor_declaration> parser::parse_constructor_declarat
     // parameters
     ctor->parameters = parse_parameters();
 
+    // super constructor
+    if (match(lexer::token_type::tok_colon)) {
+        consume(lexer::token_type::tok_kw_super, "Expected call for super constructor");
+        consume(lexer::token_type::tok_open_par,  "Expected '(' for super constructor");
+        auto args = parse_arguments();
+        ctor->super_parameters = std::move(args);
+    }
+
+
+
     // is
     consume(lexer::token_type::tok_kw_is, "Expected 'is' after constructor parameters");
 

@@ -213,6 +213,33 @@ void codegen_ast_collector::visit(ast::constructor_declaration& node) {
         ctor->parameters.push_back(std::move(codegen_param));
     }
 
+    if (node.super_parameters.has_value()) {
+        //find super class constructor decl
+        std::vector<const structures::type*> param_types;
+        param_types.reserve(node.super_parameters->size());
+        auto* class_sym = program_symbol_table.typed_lookup<structures::class_symbol>(current_class->name);
+        for (auto & super_parameter : *node.super_parameters) {
+            param_types.push_back(structures::type::inferExpressionType(super_parameter.get(), {&program_type_table, class_sym, current_scope}));
+        }
+
+        codegen::ast::constructor_declaration * decl = nullptr;
+        auto * base_class = current_class->base_class;
+        auto * base_class_sym = program_symbol_table.typed_lookup<structures::class_symbol>(base_class->name);
+        for (size_t pos = 0; pos < base_class->constructors.size(); pos++) {
+            if (structures::type::isSubTypeList(param_types, base_class_sym->constructors[pos]->parameter_types)) {
+                decl = base_class->constructors[pos].get();
+                break;
+            }
+        }
+        assert(decl != nullptr);
+
+        ctor->super_constructor = std::make_unique<codegen::ast::constructor_call_expression>();
+        for (auto &param : *node.super_parameters) {
+            ctor->super_constructor->arguments.push_back(transformExpression(param.get()));
+        }
+        ctor->super_constructor->constructor = decl;
+    }
+
     inside_function_scope = true;
     if (node.body) {
         ctor->body = transformBlock(node.body.get());
