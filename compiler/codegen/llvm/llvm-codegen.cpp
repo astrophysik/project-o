@@ -102,7 +102,7 @@ bool llvm_codegen::write_object_file(const std::string& path) {
         return ::llvm::Type::getInt1Ty(context);
     }
     if (type->name == "Unit") {
-        return ::llvm::Type::getVoidTy(context);
+        return ::llvm::Type::getInt1Ty(context);
     }
     auto it = class_types.find(type);
     if (it == class_types.end()) {
@@ -684,7 +684,7 @@ void llvm_codegen::visit(codegen::ast::constructor_call_expression& node) {
                                                      const std::vector<::llvm::Value*>& args) {
     const auto& cls_name = node.constructor->class_owner->name;
     if (cls_name == "Unit") {
-        return nullptr;
+        return ::llvm::Constant::getIntegerValue(map_type(node.constructor->class_owner), ::llvm::APInt(1, 0));;
     }
     if (args.empty()) {
         return ::llvm::Constant::getNullValue(map_type(node.constructor->class_owner));
