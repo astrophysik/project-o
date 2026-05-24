@@ -335,7 +335,7 @@ int llvm_codegen::field_index(const codegen::ast::field_declaration& field) cons
 
 ::llvm::Value* llvm_codegen::copy_value_on_heap(::llvm::Value* value, ::llvm::Type* type) {
     auto* size = ::llvm::ConstantExpr::getSizeOf(type);
-    auto* obj = builder.CreateCall(get_or_declare_allocator(), {size}, "obj");
+    auto* obj = builder.CreateCall(get_or_declare_allocator(), {size}, "copy_obj");
     builder.CreateMemCpy(obj, ::llvm::Align(8), value, ::llvm::Align(8),
                          ::llvm::ConstantExpr::getSizeOf(type));
     return obj;
