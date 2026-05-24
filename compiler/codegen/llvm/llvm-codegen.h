@@ -92,7 +92,7 @@ private:
     int field_index(const codegen::ast::field_declaration& field) const;
     ::llvm::Value* emit_field_address(::llvm::Value* object, const codegen::ast::field_declaration& field);
     ::llvm::Function* get_or_declare_allocator();
-    ::llvm::Value* copy_value_on_stack(::llvm::Value* value, ::llvm::Type * type);
+    ::llvm::Value* copy_value_on_heap(::llvm::Value* value, ::llvm::Type* type);
 
     ::llvm::Value* emit_builtin_method(const codegen::ast::method_call_expression& call,
                                        ::llvm::Value* receiver,

@@ -333,11 +333,12 @@ int llvm_codegen::field_index(const codegen::ast::field_declaration& field) cons
     return ::llvm::Function::Create(fn_type, ::llvm::Function::ExternalLinkage, "GC_malloc", module.get());
 }
 
-::llvm::Value* llvm_codegen::copy_value_on_stack(::llvm::Value* value, ::llvm::Type * type) {
-    auto * slot = builder.CreateAlloca(type, nullptr, "copy");
-    builder.CreateMemCpy(slot, ::llvm::Align(8), value, ::llvm::Align(8),
+::llvm::Value* llvm_codegen::copy_value_on_heap(::llvm::Value* value, ::llvm::Type* type) {
+    auto* size = ::llvm::ConstantExpr::getSizeOf(type);
+    auto* obj = builder.CreateCall(get_or_declare_allocator(), {size}, "obj");
+    builder.CreateMemCpy(obj, ::llvm::Align(8), value, ::llvm::Align(8),
                          ::llvm::ConstantExpr::getSizeOf(type));
-    return slot;
+    return obj;
 }
 
 ::llvm::Value* llvm_codegen::eval(codegen::ast::expression& expr) {
@@ -352,7 +353,7 @@ int llvm_codegen::field_index(const codegen::ast::field_declaration& field) cons
     if (auto * type = expression_type(&expr); !is_builtin_class(type->name) && is_value_type(type)) {
         auto it = class_types.find(type); // not map_type to get real non-pointer type
         assert(it != class_types.end());
-        auto *copy = copy_value_on_stack(current_value, it->second);
+        auto *copy = copy_value_on_heap(current_value, it->second);
         return copy;
     } else {
         return current_value;
