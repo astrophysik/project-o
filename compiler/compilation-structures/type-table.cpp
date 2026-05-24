@@ -32,14 +32,10 @@ find_method_in_hierarchy(structures::class_symbol* class_symbol, const std::stri
                 continue;
             if (method->parameter_types.size() != argument_types.size())
                 continue;
-
-            for (size_t i = 0; i < argument_types.size(); ++i) {
-                if (!structures::type::isSubtype(argument_types[i], method->parameter_types[i])) {
-                    break;
-                }
+            if (structures::type::isSubTypeList(argument_types, method->parameter_types)) {
+                best_match = method;
+                break;
             }
-            best_match = method;
-            break;
         }
         current = current->base_class;
     }
@@ -306,7 +302,7 @@ const type* type_table::resolveType(const std::string& name) const {
 }
 
 bool type_table::isPrimitiveTypeName(const std::string& name) {
-    return name == "Integer" || name == "Boolean" || name == "Real" || name == "Unit" || name == "AnyRef" || name == "AnyVal";
+    return name == "Integer" || name == "Boolean" || name == "Real" || name == "Unit" || name == "AnyRef" || name == "AnyValue";
 }
 
 } // namespace structures

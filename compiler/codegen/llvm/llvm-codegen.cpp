@@ -19,6 +19,45 @@
 #include <llvm/TargetParser/Host.h>
 
 #include "compiler/common/variant-helper.h"
+#include "compiler/compilation-structures/type-table.h"
+
+namespace {
+
+bool is_value_type(codegen::ast::class_declaration * decl) {
+    while (decl != nullptr) {
+        if (decl->name == "AnyValue") {
+            return true;
+        }
+        decl = decl->base_class;
+    }
+    return false;
+}
+
+codegen::ast::class_declaration * expression_type(codegen::ast::expression * expr) {
+    if (auto literal = dynamic_cast<codegen::ast::literal_expression *>(expr)) {
+        return literal->type;
+    } else if (auto this_expr = dynamic_cast<codegen::ast::this_expression *>(expr)) {
+        return this_expr->type;
+    } else if (auto ident = dynamic_cast<codegen::ast::identifier_expression *>(expr)) {
+        return std::visit(overloaded{
+                       [](codegen::ast::variable_declaration* d) -> auto * { return d->type; },
+                       [](codegen::ast::parameter_declaration* d) -> auto * { return d->type; },
+                       [](codegen::ast::field_declaration* d) -> auto * { return d->type; }},
+                   ident->target);
+    } else if (auto method_call = dynamic_cast<codegen::ast::method_call_expression *>(expr)) {
+        return method_call->return_type;
+    } else if (auto ctor_call = dynamic_cast<codegen::ast::constructor_call_expression *>(expr)) {
+        return ctor_call->constructor->class_owner;
+    } else if (auto member = dynamic_cast<codegen::ast::member_expression *>(expr)) {
+        return member->member->type;
+    } else if (auto group = dynamic_cast<codegen::ast::grouping_expression *>(expr)) {
+        return expression_type(group->inner.get());
+    }
+    assert(false);
+    return nullptr;
+}
+
+}
 
 namespace codegen::llvm_ir {
 
@@ -102,7 +141,7 @@ bool llvm_codegen::write_object_file(const std::string& path) {
         return ::llvm::Type::getInt1Ty(context);
     }
     if (type->name == "Unit") {
-        return ::llvm::Type::getVoidTy(context);
+        return ::llvm::Type::getInt1Ty(context);
     }
     auto it = class_types.find(type);
     if (it == class_types.end()) {
@@ -294,10 +333,31 @@ int llvm_codegen::field_index(const codegen::ast::field_declaration& field) cons
     return ::llvm::Function::Create(fn_type, ::llvm::Function::ExternalLinkage, "GC_malloc", module.get());
 }
 
+::llvm::Value* llvm_codegen::copy_value_on_heap(::llvm::Value* value, ::llvm::Type* type) {
+    auto* size = ::llvm::ConstantExpr::getSizeOf(type);
+    auto* obj = builder.CreateCall(get_or_declare_allocator(), {size}, "copy_obj");
+    builder.CreateMemCpy(obj, ::llvm::Align(8), value, ::llvm::Align(8),
+                         ::llvm::ConstantExpr::getSizeOf(type));
+    return obj;
+}
+
 ::llvm::Value* llvm_codegen::eval(codegen::ast::expression& expr) {
     current_value = nullptr;
     expr.accept(*this);
     return current_value;
+}
+
+::llvm::Value* llvm_codegen::eval_value_or_ref(codegen::ast::expression& expr) {
+    current_value = nullptr;
+    expr.accept(*this);
+    if (auto * type = expression_type(&expr); !is_builtin_class(type->name) && is_value_type(type)) {
+        auto it = class_types.find(type); // not map_type to get real non-pointer type
+        assert(it != class_types.end());
+        auto *copy = copy_value_on_heap(current_value, it->second);
+        return copy;
+    } else {
+        return current_value;
+    }
 }
 
 void llvm_codegen::emit_method_body(codegen::ast::method_declaration& method) {
@@ -499,15 +559,13 @@ void llvm_codegen::visit(codegen::ast::variable_declaration& node) {
     auto* slot = create_entry_alloca(var_ty, node.name);
     variable_slots[&node] = slot;
     if (node.initializer) {
-        auto* value = eval(*node.initializer);
-        if (value) {
-            builder.CreateStore(value, slot);
-        }
+        auto* value = eval_value_or_ref(*node.initializer);
+        builder.CreateStore(value, slot);
     }
 }
 
 void llvm_codegen::visit(codegen::ast::variable_assignment& node) {
-    auto* value = eval(*node.value);
+    auto* value = eval_value_or_ref(*node.value);
     ::llvm::Value* slot = std::visit(overloaded{
                                          [this](codegen::ast::variable_declaration* d) -> ::llvm::Value* { return variable_slots.at(d); },
                                          [this](codegen::ast::parameter_declaration* d) -> ::llvm::Value* { return parameter_slots.at(d); },
@@ -517,7 +575,7 @@ void llvm_codegen::visit(codegen::ast::variable_assignment& node) {
 }
 
 void llvm_codegen::visit(codegen::ast::field_assignment& node) {
-    auto* value = eval(*node.value);
+    auto* value = eval_value_or_ref(*node.value);
     auto* object = eval(*node.target->object);
     auto* addr = emit_field_address(object, *node.target->member);
     builder.CreateStore(value, addr);
@@ -629,7 +687,8 @@ void llvm_codegen::visit(codegen::ast::method_call_expression& node) {
     std::vector<::llvm::Value*> args;
     args.reserve(node.arguments.size());
     for (auto& arg : node.arguments) {
-        args.push_back(eval(*arg));
+        auto *value = eval_value_or_ref(*arg);
+        args.push_back(value);
     }
 
     if (is_builtin_class(node.method->class_owner->name)) {
@@ -658,7 +717,8 @@ void llvm_codegen::visit(codegen::ast::constructor_call_expression& node) {
     std::vector<::llvm::Value*> args;
     args.reserve(node.arguments.size());
     for (auto& arg : node.arguments) {
-        args.push_back(eval(*arg));
+        auto *value = eval_value_or_ref(*arg);
+        args.push_back(value);
     }
 
     if (is_builtin_class(node.constructor->class_owner->name)) {
@@ -684,7 +744,7 @@ void llvm_codegen::visit(codegen::ast::constructor_call_expression& node) {
                                                      const std::vector<::llvm::Value*>& args) {
     const auto& cls_name = node.constructor->class_owner->name;
     if (cls_name == "Unit") {
-        return nullptr;
+        return ::llvm::Constant::getIntegerValue(map_type(node.constructor->class_owner), ::llvm::APInt(1, 0));;
     }
     if (args.empty()) {
         return ::llvm::Constant::getNullValue(map_type(node.constructor->class_owner));
