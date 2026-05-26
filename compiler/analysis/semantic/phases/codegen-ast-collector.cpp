@@ -543,6 +543,8 @@ std::unique_ptr<codegen::ast::block> codegen_ast_collector::transformBlock(ast::
         item->accept(*this);
         if (last_statement) {
             result->items.push_back(std::move(last_statement));
+        } else if (last_expression) {
+            result->items.push_back(std::move(last_expression));
         }
     }
 

@@ -220,7 +220,12 @@ void class_method_checker::visit(ast::assignment_statement& node) {
 }
 
 void class_method_checker::visit(ast::call_expression& node) {
-    error_message += errors.format_error(node.span, "Call expression with discarded result are forbidden");
+    try {
+        const auto* expressionType = structures::type::inferExpressionType(&node, {&program_type_table, current_class_symbol, current_symbol_table});
+        assert(expressionType != nullptr);
+    } catch (const std::exception & e) {
+        error_message += errors.format_error(node.span, "Cannot infer type due error : {}", e.what());
+    }
 }
 
 void class_method_checker::visit(ast::parameter_declaration& node) {}
