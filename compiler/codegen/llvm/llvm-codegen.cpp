@@ -1011,7 +1011,8 @@ void llvm_codegen::visit(codegen::ast::constructor_call_expression& node) {
 
     if (cls == "ArrayInteger") {
         if (name == "Len") {
-            return builder.CreateStructGEP(internal_ref_class_types[node.method->class_owner->name], receiver, 1, "array.len");
+            auto * len_ptr = builder.CreateStructGEP(internal_ref_class_types[node.method->class_owner->name], receiver, 1, "array.len.ptr");
+            return builder.CreateLoad(::llvm::Type::getInt64Ty(context), len_ptr, "len");
         }
         if (name == "Get") {
             return builder.CreateCall(get_or_create_array_get(), {receiver, args[0]});
