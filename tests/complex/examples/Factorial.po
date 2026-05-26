@@ -15,5 +15,7 @@ class Main is
     this() is
         var f : Factorial()
         var x : f.fact(5)
+        var io : IO()
+        io.Print(x)
     end
 end
