@@ -48,6 +48,12 @@ codegen::ast::class_declaration* codegen_ast_collector::resolveType(const struct
     case structures::type_kind::Unit:
         type_name = "Unit";
         break;
+    case structures::type_kind::ArrayInteger:
+        type_name = "ArrayInteger";
+        break;
+    case structures::type_kind::IO:
+        type_name = "IO";
+        break;
     default:
         return nullptr;
     }
