@@ -22,6 +22,8 @@ enum class type_kind {
     Int,
     Bool,
     Real,
+    ArrayInteger,
+    IO,
     Class,
     Unknown,
 };

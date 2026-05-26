@@ -302,7 +302,7 @@ const type* type_table::resolveType(const std::string& name) const {
 }
 
 bool type_table::isPrimitiveTypeName(const std::string& name) {
-    return name == "Integer" || name == "Boolean" || name == "Real" || name == "Unit" || name == "AnyRef" || name == "AnyValue";
+    return name == "Integer" || name == "Boolean" || name == "Real" || name == "Unit" || name == "AnyRef" || name == "AnyValue" || name == "ArrayInteger" || name == "IO";
 }
 
 } // namespace structures
