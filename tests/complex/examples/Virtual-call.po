@@ -1,0 +1,41 @@
+class Base is
+    var field : 0
+    this() is
+    end
+
+    this(p : Integer) is
+    end
+
+    method foo() : Integer => 0
+end
+
+class Derived extends Base is
+    var field : 0
+    var foo : false
+    this(p : Integer) : super(p) is
+    end
+
+    this() : super() is
+    end
+
+    method foo() : Integer => 42
+end
+
+class Worker is
+    var base : Base()
+    this(b : Base) is
+        base := b
+    end
+
+    method work() : Integer is
+        return base.foo()
+    end
+end
+
+
+class Main is
+    this() is
+        var w : Worker(Derived())
+        var r : w.work()
+    end
+end

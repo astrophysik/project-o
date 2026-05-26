@@ -2,46 +2,44 @@ class BubbleSort is
     this() is
     end
 
-    method sort(arr: ArrayInteger) is
-        var n : arr.Length()
+    method sort(arr: ArrayInteger) : Unit is
+        var n : arr.Len()
         var i : Integer(1)
 
-        while(i.Less(n)) loop
-            var j : Integer(1)
-            var swapped : false
-
-            while(j.Less(n.Minus(i))) loop
-                if a.get(j).Greator(a.get(j.Plus(1))) then
-                    var tmp : a.get(j)
-                    a.set(j, a.get(j.Plus(1)))
-                    a.set(j.Plus(1), tmp)
-                    swapped := true
+        while(i.Less(n.Minus(1))) loop
+            var j : 0
+            while(j.Less(n.Minus(1))) loop
+                if arr.Get(j).Greater(arr.Get(j.Plus(1))) then
+                    var tmp : arr.Get(j)
+                    arr.Set(j, arr.Get(j.Plus(1)))
+                    arr.Set(j.Plus(1), tmp)
                 end
-
                 j := j.Plus(1)
-
             end
-
-            if swapped.Not then
-                return
-            end
-
             i := i.Plus(1)
         end
+        return Unit()
     end
 end
 
 class Main is
     this() is
         var arr: ArrayInteger(5)
-        arr.set(0, 6)
-        arr.set(1, 2)
-        arr.set(2, 4)
-        arr.set(3, 2)
-        arr.set(4, 3)
+        arr.Set(0, 6)
+        arr.Set(1, 2)
+        arr.Set(2, 4)
+        arr.Set(3, 2)
+        arr.Set(4, 3)
 
-        var sort : BubbleSort()
-        sort.sort(arr)
-        // IO.print(arr)
+        var Sort : BubbleSort()
+        Sort.sort(arr)
+        var io : IO()
+        var n : arr.Len()
+        var i : 0
+        while i.Less(arr.Len()) loop
+            var v : arr.Get(i)
+            io.Print(v)
+            i := i.Plus(1)
+        end
     end
 end

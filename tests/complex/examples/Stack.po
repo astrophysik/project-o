@@ -1,5 +1,5 @@
 class IntStack is
-    var elements : ArrayInteger
+    var elements : ArrayInteger(0)
     var top : 0
 
     this(capacity: Integer) is
@@ -7,16 +7,17 @@ class IntStack is
         top := 0
     end
 
-    method push(item: Integer) is
-        if top.Less(elements.Length) then
-            elements.set(top, item)
+    method push(item: Integer) : Unit is
+        if top.Less(elements.Len()) then
+            elements.Set(top, item)
             top := top.Plus(1)
         end
+        return Unit()
     end
 
     method pop() : Integer is
         top := top.Minus(1)
-        return elements.get(top)
+        return elements.Get(top)
     end
 
     method isEmpty() : Boolean => top.Equal(0)
@@ -28,7 +29,10 @@ class Main is
         st.push(10)
         st.push(20)
         st.push(30)
-        var x : st.pop
-        var y : st.pop
+        var io : IO()
+        var x : st.pop()
+        var y : st.pop()
+        io.Print(x)
+        io.Print(y)
     end
 end

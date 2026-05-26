@@ -1,14 +1,18 @@
 class Counter is
     var count : 0
+    this() is
+    end
 
-    method increment(step: Integer) is
+    method increment(step: Integer) : Unit is
         count := count.Plus(step)
+        return Unit()
     end
 
     method get() : Integer => count
 
-    method reset() is
+    method reset() : Unit is
         count := 0
+        return Unit()
     end
 end
 
@@ -16,8 +20,7 @@ class Main is
     this() is
         var c : Counter()
         c.increment(5)
-        c.increment(3)
-        var val : c.get()
-        c.reset()
+        var io : IO()
+        io.Print(c.get())
     end
 end
