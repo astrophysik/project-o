@@ -22,6 +22,9 @@ void class_collector::visit(ast::class_declaration& node) {
         if (base_class == nullptr) {
             error_message += errors.format_error(node.span, "Class '{}' inherits from undefined class '{}'", node.name, *node.base_class);
             return;
+        } else if (base_class->name == "Class") {
+            error_message += errors.format_error(node.span, "Class '{}' inherits from  class 'Class' which is prohibited. Look for 'AnyValue' or 'AnyRef'", node.name);
+            return;
         }
     } else {
         // by default class user-defined classes extends AnyRef
