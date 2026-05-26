@@ -63,7 +63,8 @@ namespace codegen::llvm_ir {
 
 bool llvm_codegen::is_builtin_class(const std::string& name) {
     return name == "Class" || name == "AnyValue" || name == "AnyRef"
-        || name == "Integer" || name == "Real" || name == "Boolean" || name == "Unit";
+        || name == "Integer" || name == "Real" || name == "Boolean" || name == "Unit"
+        || name == "ArrayInteger";
 }
 
 llvm_codegen::llvm_codegen(const std::string& module_name, std::string entry_class_name)
@@ -131,23 +132,43 @@ bool llvm_codegen::write_object_file(const std::string& path) {
     if (!type) {
         return ::llvm::Type::getVoidTy(context);
     }
-    if (type->name == "Integer") {
-        return ::llvm::Type::getInt64Ty(context);
-    }
-    if (type->name == "Real") {
-        return ::llvm::Type::getDoubleTy(context);
-    }
-    if (type->name == "Boolean") {
-        return ::llvm::Type::getInt1Ty(context);
-    }
-    if (type->name == "Unit") {
-        return ::llvm::Type::getInt1Ty(context);
+    auto it_internal = internal_value_class_types.find(type->name);
+    if (it_internal != internal_value_class_types.end()) {
+        return it_internal->second;
     }
     auto it = class_types.find(type);
     if (it == class_types.end()) {
         return ::llvm::PointerType::get(context, 0);
     }
     return ::llvm::PointerType::get(it->second, 0);
+}
+
+::llvm::Type* llvm_codegen::declare_internal_class_type(codegen::ast::class_declaration& cls) {
+    ::llvm::Type* st;
+    if (cls.name == "Integer") {
+        st = ::llvm::Type::getInt64Ty(context);
+        internal_value_class_types[cls.name] = st;
+    } else if (cls.name == "Real") {
+        st = ::llvm::Type::getDoubleTy(context);
+        internal_value_class_types[cls.name] = st;
+    } else if (cls.name == "Boolean") {
+        st = ::llvm::Type::getInt1Ty(context);
+        internal_value_class_types[cls.name] = st;
+    } else if (cls.name == "Unit") {
+        st = ::llvm::Type::getInt1Ty(context);
+        internal_value_class_types[cls.name] = st;
+    } else if (cls.name == "ArrayInteger") {
+        auto* array_t = ::llvm::StructType::create(context, "class." + cls.name);
+        auto* ptr_ty = ::llvm::PointerType::get(context, 0);
+        std::vector<::llvm::Type*> field_types{ptr_ty, ::llvm::Type::getInt64Ty(context)};
+        array_t->setBody(field_types, false);
+        st = array_t;
+        internal_ref_class_types[cls.name] = st;
+    } else {
+        st = ::llvm::StructType::create(context, "class." + cls.name);
+        internal_value_class_types[cls.name] = st;
+    }
+    return st;
 }
 
 ::llvm::StructType* llvm_codegen::declare_class_type(codegen::ast::class_declaration& cls) {
@@ -333,6 +354,116 @@ int llvm_codegen::field_index(const codegen::ast::field_declaration& field) cons
     return ::llvm::Function::Create(fn_type, ::llvm::Function::ExternalLinkage, "GC_malloc", module.get());
 }
 
+::llvm::Function* llvm_codegen::get_or_create_array_get() {
+    if (auto *f = module->getFunction("ArrayInteger_Get")) {
+        return f;
+    }
+    auto *saved_block = builder.GetInsertBlock();
+    auto saved_ip = builder.GetInsertPoint();
+
+    auto *i64 = ::llvm::Type::getInt64Ty(context);
+    auto *ptr_ty = ::llvm::PointerType::get(context, 0);
+    auto *fn_type = ::llvm::FunctionType::get(i64, {ptr_ty, i64}, false);
+    auto *fn = ::llvm::Function::Create(fn_type, ::llvm::Function::ExternalLinkage, "ArrayInteger_Get", module.get());
+
+    fn->arg_begin()->setName("array");
+    std::next(fn->arg_begin())->setName("index");
+
+    auto *entry = ::llvm::BasicBlock::Create(context, "entry", fn);
+    auto *ok_block = ::llvm::BasicBlock::Create(context, "ok.block", fn);
+    auto *bad_block = ::llvm::BasicBlock::Create(context, "bad.block", fn);
+
+    builder.SetInsertPoint(entry);
+
+    auto *array = fn->getArg(0);
+    auto *index = fn->getArg(1);
+
+    auto *array_type = internal_ref_class_types["ArrayInteger"];
+
+    auto *len_ptr = builder.CreateStructGEP(array_type, array, 1, "len.ptr");
+    auto *len = builder.CreateLoad(i64, len_ptr, "len");
+
+    auto *negative = builder.CreateICmpSLT(index, builder.getInt64(0));
+    auto *overflow = builder.CreateICmpSGE(index, len);
+    auto *bad_condition = builder.CreateOr(negative, overflow);
+
+    builder.CreateCondBr(bad_condition, bad_block, ok_block);
+
+    builder.SetInsertPoint(bad_block);
+    auto trap_fn = module->getOrInsertFunction("llvm.trap", ::llvm::FunctionType::get(builder.getVoidTy(), false));
+    builder.CreateCall(trap_fn, {});
+    builder.CreateUnreachable();
+
+    builder.SetInsertPoint(ok_block);
+    auto* data_ptr = builder.CreateStructGEP(array_type, array, 0, "data.ptr");
+    auto* data = builder.CreateLoad(ptr_ty, data_ptr, "data");
+    auto* elem_ptr = builder.CreateInBoundsGEP(i64, data, index, "elem.ptr");
+    auto* elem = builder.CreateLoad(i64, elem_ptr, "elem");
+    builder.CreateRet(elem);
+
+    if (saved_block) {
+        builder.SetInsertPoint(saved_block, saved_ip);
+    }
+    return fn;
+}
+
+::llvm::Function* llvm_codegen::get_or_create_array_set() {
+    if (auto *f = module->getFunction("ArrayInteger_Set")) {
+        return f;
+    }
+    auto *saved_block = builder.GetInsertBlock();
+    auto saved_ip = builder.GetInsertPoint();
+
+    auto *i64 = ::llvm::Type::getInt64Ty(context);
+    auto *unit_t = internal_value_class_types["Unit"];
+    auto *ptr_ty = ::llvm::PointerType::get(context, 0);
+    auto *fn_type = ::llvm::FunctionType::get(unit_t, {ptr_ty, i64, i64}, false);
+    auto *fn = ::llvm::Function::Create(fn_type, ::llvm::Function::ExternalLinkage, "ArrayInteger_Set", module.get());
+
+    fn->arg_begin()->setName("array");
+    std::next(fn->arg_begin())->setName("index");
+    std::next(std::next(fn->arg_begin()))->setName("value");
+
+    auto *entry = ::llvm::BasicBlock::Create(context, "entry", fn);
+    auto *ok_block = ::llvm::BasicBlock::Create(context, "ok.block", fn);
+    auto *bad_block = ::llvm::BasicBlock::Create(context, "bad.block", fn);
+
+    builder.SetInsertPoint(entry);
+
+    auto *array = fn->getArg(0);
+    auto *index = fn->getArg(1);
+    auto *value = fn->getArg(2);
+
+    auto *array_type = internal_ref_class_types["ArrayInteger"];
+
+    auto *len_ptr = builder.CreateStructGEP(array_type, array, 1, "len.ptr");
+    auto *len = builder.CreateLoad(i64, len_ptr, "len");
+
+    auto *negative = builder.CreateICmpSLT(index, builder.getInt64(0));
+    auto *overflow = builder.CreateICmpSGE(index, len);
+    auto *bad_condition = builder.CreateOr(negative, overflow);
+
+    builder.CreateCondBr(bad_condition, bad_block, ok_block);
+
+    builder.SetInsertPoint(bad_block);
+    auto trap_fn = module->getOrInsertFunction("llvm.trap", ::llvm::FunctionType::get(builder.getVoidTy(), false));
+    builder.CreateCall(trap_fn, {});
+    builder.CreateUnreachable();
+
+    builder.SetInsertPoint(ok_block);
+
+    auto * data_ptr = builder.CreateStructGEP(array_type, array, 0, "data.ptr");
+    auto *data = builder.CreateLoad(ptr_ty, data_ptr, "data");
+    auto *elem_ptr = builder.CreateInBoundsGEP(i64, data, index, "elem.ptr");
+    builder.CreateStore(value, elem_ptr);
+    builder.CreateRet(::llvm::Constant::getIntegerValue(unit_t, ::llvm::APInt(1, 0)));
+
+    if (saved_block) {
+        builder.SetInsertPoint(saved_block, saved_ip);
+    }
+    return fn;
+}
+
 ::llvm::Value* llvm_codegen::copy_value_on_heap(::llvm::Value* value, ::llvm::Type* type) {
     auto* size = ::llvm::ConstantExpr::getSizeOf(type);
     auto* obj = builder.CreateCall(get_or_declare_allocator(), {size}, "copy_obj");
@@ -496,7 +627,7 @@ void llvm_codegen::emit_main(codegen::ast::program& program) {
 
 void llvm_codegen::visit(codegen::ast::program& node) {
     for (auto& cls : node.internal_classes) {
-        declare_class_type(*cls);
+        declare_internal_class_type(*cls);
     }
     for (auto& cls : node.classes) {
         declare_class_type(*cls);
@@ -744,7 +875,23 @@ void llvm_codegen::visit(codegen::ast::constructor_call_expression& node) {
                                                      const std::vector<::llvm::Value*>& args) {
     const auto& cls_name = node.constructor->class_owner->name;
     if (cls_name == "Unit") {
-        return ::llvm::Constant::getIntegerValue(map_type(node.constructor->class_owner), ::llvm::APInt(1, 0));;
+        return ::llvm::Constant::getIntegerValue(map_type(node.constructor->class_owner), ::llvm::APInt(1, 0));
+    }
+    if (cls_name == "ArrayInteger") {
+        assert(args.size() == 1);
+        auto* type_size = ::llvm::ConstantExpr::getSizeOf(::llvm::Type::getInt64Ty(context));
+        auto *size = builder.CreateMul(args[0], type_size);
+        auto* data = builder.CreateCall(get_or_declare_allocator(), {size}, "data");
+
+        auto *array_type = internal_ref_class_types[node.constructor->class_owner->name];
+        auto *array_type_sie = ::llvm::ConstantExpr::getSizeOf(array_type);
+        auto* array = builder.CreateCall(get_or_declare_allocator(), {array_type_sie}, "array");
+
+        auto * array_src = builder.CreateStructGEP(array_type, array, 0, "data.ptr");
+        builder.CreateStore(data, array_src);
+        auto * array_size = builder.CreateStructGEP(array_type, array, 1, "len.ptr");
+        builder.CreateStore(args[0], array_size);
+        return array;
     }
     if (args.empty()) {
         return ::llvm::Constant::getNullValue(map_type(node.constructor->class_owner));
@@ -843,6 +990,18 @@ void llvm_codegen::visit(codegen::ast::constructor_call_expression& node) {
         }
         if (name == "Xor") {
             return builder.CreateXor(receiver, args[0]);
+        }
+    }
+
+    if (cls == "ArrayInteger") {
+        if (name == "Len") {
+            return builder.CreateStructGEP(internal_ref_class_types[node.method->class_owner->name], receiver, 1, "array.len");
+        }
+        if (name == "Get") {
+            return builder.CreateCall(get_or_create_array_get(), {receiver, args[0]});
+        }
+        if (name == "Set") {
+            return builder.CreateCall(get_or_create_array_set(), {receiver, args[0], args[1]});
         }
     }
 

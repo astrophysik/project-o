@@ -61,6 +61,8 @@ private:
     std::string entry_class_name;
 
     std::unordered_map<const codegen::ast::class_declaration*, ::llvm::StructType*> class_types;
+    std::unordered_map<std::string, ::llvm::Type*> internal_value_class_types;
+    std::unordered_map<std::string, ::llvm::Type*> internal_ref_class_types;
     std::unordered_map<const codegen::ast::method_declaration*, ::llvm::Function*> method_functions;
     std::unordered_map<const codegen::ast::constructor_declaration*, ::llvm::Function*> constructor_functions;
     std::unordered_map<const codegen::ast::variable_declaration*, ::llvm::AllocaInst*> variable_slots;
@@ -73,6 +75,7 @@ private:
     ::llvm::Function* current_function = nullptr;
 
     ::llvm::Type* map_type(const codegen::ast::class_declaration* type);
+    ::llvm::Type* declare_internal_class_type(codegen::ast::class_declaration& cls);
     ::llvm::StructType* declare_class_type(codegen::ast::class_declaration& cls);
     void define_class_layout(codegen::ast::class_declaration& cls);
     void declare_method(codegen::ast::method_declaration& method);
@@ -92,6 +95,8 @@ private:
     int field_index(const codegen::ast::field_declaration& field) const;
     ::llvm::Value* emit_field_address(::llvm::Value* object, const codegen::ast::field_declaration& field);
     ::llvm::Function* get_or_declare_allocator();
+    ::llvm::Function* get_or_create_array_get();
+    ::llvm::Function* get_or_create_array_set();
     ::llvm::Value* copy_value_on_heap(::llvm::Value* value, ::llvm::Type* type);
 
     ::llvm::Value* emit_builtin_method(const codegen::ast::method_call_expression& call,

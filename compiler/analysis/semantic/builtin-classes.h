@@ -44,6 +44,7 @@ inline void add_builtin_classes(structures::symbol_table& sym_table, structures:
 
     auto anyref_sym = std::make_unique<structures::class_symbol>("AnyRef", class_ptr->class_scope.get(), class_ptr);
     type_table.addClass("AnyRef", nullptr);
+    auto* anyref_ptr = anyref_sym.get();
     sym_table.add(std::move(anyref_sym));
 
     auto integer_sym = std::make_unique<structures::class_symbol>("Integer", anyvalue_ptr->class_scope.get(), anyvalue_ptr);
@@ -65,6 +66,11 @@ inline void add_builtin_classes(structures::symbol_table& sym_table, structures:
     type_table.addClass("Unit", nullptr);
     auto* unit_ptr = unit_sym.get();
     sym_table.add(std::move(unit_sym));
+
+    auto array_integer_sym = std::make_unique<structures::class_symbol>("ArrayInteger", anyref_ptr->class_scope.get(), anyref_ptr);
+    type_table.addClass("ArrayInteger", nullptr);
+    auto *array_integer_ptr = array_integer_sym.get();
+    sym_table.add(std::move(array_integer_sym));
 
     add_constructor(integer_ptr, {type_table.resolveType("Integer")}, type_table);
     add_constructor(integer_ptr, {type_table.resolveType("Real")}, type_table);
@@ -133,6 +139,11 @@ inline void add_builtin_classes(structures::symbol_table& sym_table, structures:
     add_method(boolean_ptr, "Not", type_table.resolveType("Boolean"), {}, type_table);
 
     add_constructor(unit_ptr, {}, type_table);
+
+    add_constructor(array_integer_ptr, {type_table.resolveType("Integer")}, type_table);
+    add_method(array_integer_ptr, "Len", type_table.resolveType("Integer"), {}, type_table);
+    add_method(array_integer_ptr, "Get", type_table.resolveType("Integer"), {type_table.resolveType("Integer")}, type_table);
+    add_method(array_integer_ptr, "Set", type_table.resolveType("Unit"), {type_table.resolveType("Integer"), type_table.resolveType("Integer")}, type_table);
 }
 
 inline void add_codegen_field(codegen::ast::class_declaration* cls, const std::string& name, codegen::ast::class_declaration* field_type) {
@@ -195,6 +206,7 @@ inline void add_builtin_classes_to_codegen(codegen::ast::program& program) {
     program.internal_classes.push_back(std::move(anyvalue_cls));
 
     auto anyref_cls = create_builtin_class("AnyRef", class_ptr);
+    auto* anyref_ptr = anyref_cls.get();
     program.internal_classes.push_back(std::move(anyref_cls));
 
     auto integer_cls = create_builtin_class("Integer", anyvalue_ptr);
@@ -212,6 +224,10 @@ inline void add_builtin_classes_to_codegen(codegen::ast::program& program) {
     auto unit_cls = create_builtin_class("Unit", anyvalue_ptr);
     auto* unit_ptr = unit_cls.get();
     program.internal_classes.push_back(std::move(unit_cls));
+
+    auto array_integer_cls = create_builtin_class("ArrayInteger", anyref_ptr);
+    auto *array_integer_ptr = array_integer_cls.get();
+    program.internal_classes.push_back(std::move(array_integer_cls));
 
     // Add Inreger members
     add_codegen_constructor(integer_ptr, {{"p", integer_ptr}});
@@ -279,6 +295,12 @@ inline void add_builtin_classes_to_codegen(codegen::ast::program& program) {
 
     // Add Unit constructor
     add_codegen_constructor(unit_ptr, {});
+
+    // Add Array Integer members
+    add_codegen_constructor(array_integer_ptr, {{"size", integer_ptr}});
+    add_codegen_method(array_integer_ptr, "Len", integer_ptr, {});
+    add_codegen_method(array_integer_ptr, "Get", integer_ptr, {{"i", integer_ptr}});
+    add_codegen_method(array_integer_ptr, "Set", unit_ptr, {{"i", integer_ptr}, {"v", integer_ptr}});
 }
 
 } // namespace analysis::semantic::builtin
