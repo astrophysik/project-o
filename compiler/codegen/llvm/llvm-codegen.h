@@ -94,6 +94,7 @@ private:
     ::llvm::AllocaInst* create_entry_alloca(::llvm::Type* type, const std::string& name);
     int field_index(const codegen::ast::field_declaration& field) const;
     ::llvm::Value* emit_field_address(::llvm::Value* object, const codegen::ast::field_declaration& field);
+    ::llvm::Function* get_or_declare_printf();
     ::llvm::Function* get_or_declare_allocator();
     ::llvm::Function* get_or_create_array_get();
     ::llvm::Function* get_or_create_array_set();

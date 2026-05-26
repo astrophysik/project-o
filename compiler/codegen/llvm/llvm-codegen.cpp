@@ -64,7 +64,7 @@ namespace codegen::llvm_ir {
 bool llvm_codegen::is_builtin_class(const std::string& name) {
     return name == "Class" || name == "AnyValue" || name == "AnyRef"
         || name == "Integer" || name == "Real" || name == "Boolean" || name == "Unit"
-        || name == "ArrayInteger";
+        || name == "ArrayInteger" || name == "IO";
 }
 
 llvm_codegen::llvm_codegen(const std::string& module_name, std::string entry_class_name)
@@ -155,6 +155,9 @@ bool llvm_codegen::write_object_file(const std::string& path) {
         st = ::llvm::Type::getInt1Ty(context);
         internal_value_class_types[cls.name] = st;
     } else if (cls.name == "Unit") {
+        st = ::llvm::Type::getInt1Ty(context);
+        internal_value_class_types[cls.name] = st;
+    } else if (cls.name == "IO") {
         st = ::llvm::Type::getInt1Ty(context);
         internal_value_class_types[cls.name] = st;
     } else if (cls.name == "ArrayInteger") {
@@ -344,6 +347,16 @@ int llvm_codegen::field_index(const codegen::ast::field_declaration& field) cons
 ::llvm::Value* llvm_codegen::emit_field_address(::llvm::Value* object, const codegen::ast::field_declaration& field) {
     auto* owner_struct = class_types.at(field.class_owner);
     return builder.CreateStructGEP(owner_struct, object, field_index(field), "field." + field.name);
+}
+
+::llvm::Function* llvm_codegen::get_or_declare_printf() {
+    if (auto* f = module->getFunction("printf")) {
+        return f;
+    }
+    auto *ptr_ty = ::llvm::PointerType::get(context, 0);
+    auto *i32 = ::llvm::Type::getInt32Ty(context);
+    auto *fn_type = ::llvm::FunctionType::get(i32, {ptr_ty}, true);
+    return ::llvm::Function::Create(fn_type, ::llvm::Function::ExternalLinkage, "printf", module.get());
 }
 
 ::llvm::Function* llvm_codegen::get_or_declare_allocator() {
@@ -877,6 +890,9 @@ void llvm_codegen::visit(codegen::ast::constructor_call_expression& node) {
     if (cls_name == "Unit") {
         return ::llvm::Constant::getIntegerValue(map_type(node.constructor->class_owner), ::llvm::APInt(1, 0));
     }
+    if (cls_name == "IO") {
+        return ::llvm::Constant::getIntegerValue(map_type(node.constructor->class_owner), ::llvm::APInt(1, 0));
+    }
     if (cls_name == "ArrayInteger") {
         assert(args.size() == 1);
         auto* type_size = ::llvm::ConstantExpr::getSizeOf(::llvm::Type::getInt64Ty(context));
@@ -1002,6 +1018,31 @@ void llvm_codegen::visit(codegen::ast::constructor_call_expression& node) {
         }
         if (name == "Set") {
             return builder.CreateCall(get_or_create_array_set(), {receiver, args[0], args[1]});
+        }
+    }
+    if (cls == "IO") {
+        if (name == "Print") {
+            auto *printf_fn = get_or_declare_printf();
+            auto* arg_type = node.method->parameters[0]->type;
+            std::string format_str;
+
+            if (arg_type->name == "Integer") {
+                format_str = "%lld\n";
+            } else if (arg_type->name == "Real") {
+                format_str = "%f\n";
+            } else if (arg_type->name == "Boolean") {
+                format_str = "%d\n";
+            } else {
+                format_str = "%p\n";
+            }
+
+            auto* format_const = builder.CreateGlobalStringPtr(format_str, "fmt");
+
+            ::llvm::Value* arg_value = args[0];
+            builder.CreateCall(printf_fn, {format_const, arg_value});
+
+            return ::llvm::Constant::getIntegerValue(internal_value_class_types["Unit"], ::llvm::APInt(1, 0));
+
         }
     }
 

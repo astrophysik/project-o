@@ -72,6 +72,11 @@ inline void add_builtin_classes(structures::symbol_table& sym_table, structures:
     auto *array_integer_ptr = array_integer_sym.get();
     sym_table.add(std::move(array_integer_sym));
 
+    auto io_sym = std::make_unique<structures::class_symbol>("IO", anyvalue_ptr->class_scope.get(), anyvalue_ptr);
+    type_table.addClass("IO", nullptr);
+    auto *io_ptr = io_sym.get();
+    sym_table.add(std::move(io_sym));
+
     add_constructor(integer_ptr, {type_table.resolveType("Integer")}, type_table);
     add_constructor(integer_ptr, {type_table.resolveType("Real")}, type_table);
 
@@ -144,6 +149,11 @@ inline void add_builtin_classes(structures::symbol_table& sym_table, structures:
     add_method(array_integer_ptr, "Len", type_table.resolveType("Integer"), {}, type_table);
     add_method(array_integer_ptr, "Get", type_table.resolveType("Integer"), {type_table.resolveType("Integer")}, type_table);
     add_method(array_integer_ptr, "Set", type_table.resolveType("Unit"), {type_table.resolveType("Integer"), type_table.resolveType("Integer")}, type_table);
+
+    add_constructor(io_ptr, {}, type_table);
+    add_method(io_ptr, "Print", type_table.resolveType("Unit"), {type_table.resolveType("Integer")}, type_table);
+    add_method(io_ptr, "Print", type_table.resolveType("Unit"), {type_table.resolveType("Real")}, type_table);
+    add_method(io_ptr, "Print", type_table.resolveType("Unit"), {type_table.resolveType("Boolean")}, type_table);
 }
 
 inline void add_codegen_field(codegen::ast::class_declaration* cls, const std::string& name, codegen::ast::class_declaration* field_type) {
@@ -229,6 +239,10 @@ inline void add_builtin_classes_to_codegen(codegen::ast::program& program) {
     auto *array_integer_ptr = array_integer_cls.get();
     program.internal_classes.push_back(std::move(array_integer_cls));
 
+    auto io_cls = create_builtin_class("IO", anyvalue_ptr);
+    auto *io_ptr = io_cls.get();
+    program.internal_classes.push_back(std::move(io_cls));
+
     // Add Inreger members
     add_codegen_constructor(integer_ptr, {{"p", integer_ptr}});
     add_codegen_constructor(integer_ptr, {{"p", real_ptr}});
@@ -301,6 +315,12 @@ inline void add_builtin_classes_to_codegen(codegen::ast::program& program) {
     add_codegen_method(array_integer_ptr, "Len", integer_ptr, {});
     add_codegen_method(array_integer_ptr, "Get", integer_ptr, {{"i", integer_ptr}});
     add_codegen_method(array_integer_ptr, "Set", unit_ptr, {{"i", integer_ptr}, {"v", integer_ptr}});
+
+    // Add IO members
+    add_codegen_constructor(io_ptr, {});
+    add_codegen_method(io_ptr, "Print", unit_ptr, {{"p", integer_ptr}});
+    add_codegen_method(io_ptr, "Print", unit_ptr, {{"p", real_ptr}});
+    add_codegen_method(io_ptr, "Print", unit_ptr, {{"p", boolean_ptr}});
 }
 
 } // namespace analysis::semantic::builtin
