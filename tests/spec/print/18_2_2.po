@@ -1,0 +1,11 @@
+class Main is
+  this() is
+    var i : Boolean(false)
+
+    while i.And(Boolean(true)) loop
+      i := true
+    end
+    var io : IO()
+    io.Print(i.Equal(false))
+  end
+end

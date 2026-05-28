@@ -1,0 +1,8 @@
+class test is
+end
+class Main is
+  this() is
+    var io : IO()
+    io.Print(true)
+  end
+end

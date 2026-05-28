@@ -1,0 +1,16 @@
+class Main is
+  this() is
+    var i : Integer(0)
+    var j : Integer(0)
+
+    while i.Less(Integer(10)) loop
+      while j.Less(Integer(2)) loop
+        j := j.Plus(Integer(1))
+      end        
+      i := i.Plus(Integer(1))
+    end
+    var io : IO()
+    io.Print(i.Equal(10))
+    io.Print(j.Equal(2))
+  end
+end

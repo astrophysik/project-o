@@ -1,0 +1,19 @@
+class Main is
+  method double(a:Integer) : Integer is
+    return a.Mult(2)
+  end
+
+  this() is
+    var io : IO()
+    
+    var x : Integer(0)
+    x := 17
+    io.Print(x.Equal(17))
+    x := Integer(42)
+    io.Print(x.Equal(42))
+    x := this.double(x)
+    io.Print(x.Equal(84))
+    x := Integer(10).Plus(Integer(2))
+    io.Print(x.Equal(12))
+  end
+end

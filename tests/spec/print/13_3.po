@@ -1,0 +1,12 @@
+class Main is
+  method test() : Integer is
+    var temp : Integer(42)
+    return temp
+  end
+
+  this() is
+    var result : this.test()
+    var io : IO()
+    io.Print(result.Equal(42))
+  end
+end

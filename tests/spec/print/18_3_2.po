@@ -1,0 +1,15 @@
+class Main is
+  this() is
+    var five : Integer(5)
+    var ten : Integer(10)
+    var result : false
+    
+    if five.Greater(ten) then
+      result := true
+    else
+      result:= false
+    end
+    var io : IO()
+    io.Print(result.Equal(false))
+  end
+end

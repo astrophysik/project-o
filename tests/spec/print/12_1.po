@@ -1,0 +1,8 @@
+class Main is
+  this() is
+    var x : Integer(0)
+    x := Integer(42)
+    var io : IO()
+    io.Print(x.Equal(42))
+  end
+end

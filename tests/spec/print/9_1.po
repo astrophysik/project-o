@@ -1,0 +1,26 @@
+class Base is
+  this() is
+  end
+  method multiply(a:Integer) : Integer is
+    return a.Mult(2)
+  end
+end
+
+class Derived extends Base is
+  this() is
+  end
+  method multiply(a:Integer) : Integer is
+    return a.Mult(3)
+  end
+end 
+
+class Main is
+  this() is
+    var baseObj : Base()
+    var result1 : baseObj.multiply(2)
+    var io : IO()
+    io.Print(result1.Equal(4))
+    var derObj : Derived(2)
+    var result2 : derObj.multiply(2)
+    io.Print(result2.Equal(6))
+  end

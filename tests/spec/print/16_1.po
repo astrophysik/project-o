@@ -1,0 +1,11 @@
+class Main is
+  method test() : Integer is
+    return 0
+  end
+
+  this() is
+    var result : this.test()
+    var io : IO()
+    io.Print(result.Equal(0))
+  end
+end

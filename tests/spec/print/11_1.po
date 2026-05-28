@@ -1,0 +1,17 @@
+class Main is
+  method double(a:Integer) : Integer is
+    return a.Mult(2)
+  end
+
+  this() is
+    var io : IO()
+    var one : 1
+    io.Print(one.Equal(1))
+    var two : Integer(2)
+    io.Print(two.Equal(2))
+    var three : Integer(1).Plus(Integer(2))
+    io.Print(three.Equal(3))
+    var four : this.double(two)
+    io.Print(four.Equal(4))
+  end
+end

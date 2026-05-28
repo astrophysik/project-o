@@ -1,0 +1,16 @@
+class testClass is
+  this() is
+  end
+
+  var x : 42
+end
+
+class Main is
+  this() is
+    var t : testClass()
+    var value : t.x
+    var result : value.Equal(42)
+    var io : IO()
+    io.Print(result)
+  end
+end

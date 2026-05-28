@@ -1,0 +1,16 @@
+class testClass is
+  this() is
+  end
+
+  method test() is
+    var io : IO()
+    io.Print(true)
+  end
+end
+
+class Main is
+  this() is
+    var t : testClass()
+    t.test()
+  end
+end

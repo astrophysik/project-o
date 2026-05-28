@@ -1,0 +1,45 @@
+class Base is
+  this(a:Integer) is
+    x := a
+  end
+  
+  method setX(a:Integer) is
+    x := a
+  end
+  method multX(a:Integer) is
+    x := x.Mult(a)
+  end
+  
+  var x : 0
+end
+
+class Derived extends Base is
+  this(a:Integer) is
+    y := a
+  end
+
+  method doubleX() is
+    x := x.Mult(2)
+  end
+  method doubleY() is
+    y := y.Mult(2)
+  end
+  method multBase(a:Integer) is
+    multX(a)
+  end
+
+  var y : 0
+end  
+
+class Main is
+  this() is
+    var derObj : Derived(2)
+    derObj.setX(42)
+    var result : derObj.x
+    var io : IO()
+    io.Print(result.Equal(42))
+    derObj.multBase(2)
+    result := derObj.x
+    io.Print(result.Equal(84))
+  end
+end

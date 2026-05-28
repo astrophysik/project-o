@@ -1,0 +1,29 @@
+class Main is
+  method retPrimary() : Integer is
+    return 7
+  end
+
+  method retConstr() : Integer is
+    return Integer(42)
+  end
+
+  method retFunc() : Integer is
+    return this.retPrimary()
+  end
+
+  method retExpr() : Integer is
+    return Integer(42).Plus(Integer(1))
+  end
+
+  this() is
+    var io : IO()
+    var intPrimary : this.retPrimary()
+    io.Print(intPrimary.Equal(7))
+    var intConstr : this.retConstr()
+    io.Print(intConstr.Equal(42))
+    var intFunc : this.retFunc()
+    io.Print(intFunc.Equal(7))
+    var intExpr : this.retExpr()
+    io.Print(intExpr.Equal(43))
+  end
+end
