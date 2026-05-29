@@ -492,19 +492,19 @@ void codegen_ast_collector::visit(ast::call_expression& node) {
                             }
 
                             if (matches) {
-                                if (best_match != nullptr) {
-                                    // Ambiguous - keep first match
-                                } else {
-                                    best_match = method;
-                                    best_match_index = i;
-                                }
+                                best_match = method;
+                                best_match_index = i;
                             }
+                        }
+                        if (best_match) {
+                            break;
                         }
                         current = current->base_class;
                     }
 
                     if (best_match) {
-                        method_call->method = target_class->methods[best_match_index].get();
+                        auto * type = resolveType(current->name);
+                        method_call->method = type->methods[best_match_index].get();
                         if (best_match->return_type.has_value()) {
                             method_call->return_type = resolveType(*best_match->return_type);
                         }
